@@ -1,6 +1,6 @@
 #@ImagePlus imp
 from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar
-from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,CvMoments,drawContours
+from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours
 from ImageConverter import ImProcToMat,MatToImProc
 from ij import ImagePlus
 
@@ -45,11 +45,21 @@ def detectContours(binary_masks):
 
 
 def contourCenterExtractor(largest_contour):
-    moments = CvMoments(largest_contour)
-    print(moments)
+    """
+    Extracts the center coordinates of a contour using its moments.
+
+    Arguments:
+    largest_contour -- The contour for which to calculate the center.
+
+    Returns:
+    Com_x -- The x-coordinate of the center.
+    Com_y -- The y-coordinate of the center.
+    """
+    # Calculate the moments of the largest contour
+    contour_Moments = moments(largest_contour)
     # Calculate the x and y coordinates of the center using moments
-    Com_x = int(moments.m10() / moments.m00())
-    Com_y = int(moments.m01() / moments.m00())
+    Com_x = int(contour_Moments.m10() / contour_Moments.m00())
+    Com_y = int(contour_Moments.m01() / contour_Moments.m00())
     return Com_x, Com_y
 
     
@@ -62,13 +72,9 @@ if __name__ in ['__main__', '__builtin__']:
 	largest_contour = detectContours(binary_masks)
 	print(largest_contour)
 	#print(Cvlargest_contour)
-	#Com_x, Com_y = contourCenterExtractor(largest_contour)
-	#print(Com_x, Com_y)
-	contour_image = Mat(binary_masks.rows(), binary_masks.cols(), binary_masks.type())
-	drawContours(contour_image,MatVector(largest_contour), -1, Scalar(255, 255, 255,0.5),)
-	img=MatToImProc(contour_image)
-	imp2=ImagePlus("imp2",img)
-	imp2.show()
+	Com_x, Com_y = contourCenterExtractor(largest_contour)
+	print(Com_x, Com_y)
+
 	
 	
 	
