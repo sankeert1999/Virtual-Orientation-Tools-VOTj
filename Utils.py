@@ -41,9 +41,9 @@ def detectContours(binary_masks):
 
     max_value, max_value_index = getMax(area)
     largest_contour = listContour.get(max_value_index)
-    largest_contour_out=Mat()
-    largest_contour.convertTo(largest_contour_out,5)
-    return largest_contour_out
+    #largest_contour_out=Mat()
+    #largest_contour.convertTo(largest_contour_out,5)
+    return largest_contour
 
 
 def contourCenterExtractor(largest_contour):
@@ -86,7 +86,11 @@ if __name__ in ['__main__', '__builtin__']:
 	mat_x=largest_contour_MV.get(0)
 	#print(mat_x.cols())
 	jkl=CvMat(mat_x)
-	print(opi.get(0,1,2))
+	print(opi.get(2,0,0))
+	#fgh=Mat()
+	fgh=Mat(opi)
+	print(opi.total())
+	print(fgh)
 	#hj=[0,56]
 	#print(mat_x)
 	#jk=largest_contour.reshape(1,2)
