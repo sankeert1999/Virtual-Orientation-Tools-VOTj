@@ -1,5 +1,5 @@
 #@ImagePlus imp
-from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar
+from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split
 from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours
 from ImageConverter import ImProcToMat,MatToImProc
 from ij import ImagePlus
@@ -41,7 +41,9 @@ def detectContours(binary_masks):
 
     max_value, max_value_index = getMax(area)
     largest_contour = listContour.get(max_value_index)
-    return largest_contour
+    largest_contour_out=Mat()
+    largest_contour.convertTo(largest_contour_out,5)
+    return largest_contour_out
 
 
 def contourCenterExtractor(largest_contour):
@@ -69,15 +71,38 @@ def contourCenterExtractor(largest_contour):
 if __name__ in ['__main__', '__builtin__']:
 	# Convert ImageProcessor to Mat using custom ImageConverter
 	imMat = ImProcToMat(imp.getProcessor())
+	#hj=[1,23]
+	#print(CvMat(imMat))
+	#print(imMat.ptr(hj))
 	# Use the converted image as binary mask
 	binary_masks = imMat
 	# Detect the largest contour in the binary mask
 	largest_contour = detectContours(binary_masks)
-	jk=largest_contour.reshape(1,2)
-	print(jk.rows())
+	opi=CvMat(largest_contour)
+	largest_contour_MV=MatVector()
+	split(largest_contour,largest_contour_MV)
+	#print(CvMat(largest_contour_MV.get(0)))
+	#mat_x=Mat()
+	mat_x=largest_contour_MV.get(0)
+	#print(mat_x.cols())
+	jkl=CvMat(mat_x)
+	print(opi.get(0,1,2))
+	#hj=[0,56]
+	#print(mat_x)
+	#jk=largest_contour.reshape(1,2)
+	#print(largest_contour_MV)
+	#imp2=MatToImProc(largest_contour_MV.get(0))
+	#print(imp2.getPixel(0,0))
+	#hj=[0,24]
+	#print(largest_contour)
+	#print(largest_contour.cols())
+	#print(largest_contour.ptr(hj))
+	#jk=largest_contour.reshape(1,2)
+	
+	#print(jk.rows())
 	#print(Cvlargest_contour)
-	Com_x, Com_y = contourCenterExtractor(largest_contour)
-	print(Com_x, Com_y)
+	#Com_x, Com_y = contourCenterExtractor(largest_contour)
+	#print(Com_x, Com_y)
 	
 
 	
