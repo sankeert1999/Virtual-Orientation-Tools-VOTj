@@ -61,7 +61,10 @@ def contourCenterExtractor(largest_contour):
     Com_x = int(contour_Moments.m10() / contour_Moments.m00())
     Com_y = int(contour_Moments.m01() / contour_Moments.m00())
     return Com_x, Com_y
-
+   
+# Function to get orientation
+#def getOrientation(pts):
+	
     
 if __name__ in ['__main__', '__builtin__']:
 	# Convert ImageProcessor to Mat using custom ImageConverter
@@ -70,10 +73,12 @@ if __name__ in ['__main__', '__builtin__']:
 	binary_masks = imMat
 	# Detect the largest contour in the binary mask
 	largest_contour = detectContours(binary_masks)
-	print(largest_contour)
+	jk=largest_contour.reshape(1,2)
+	print(jk.rows())
 	#print(Cvlargest_contour)
 	Com_x, Com_y = contourCenterExtractor(largest_contour)
 	print(Com_x, Com_y)
+	
 
 	
 	
