@@ -1,5 +1,5 @@
 #@ImagePlus imp
-from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size
+from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet
 from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
 from ImageConverter import ImProcToMat,MatToImProc
 from ij import ImagePlus
@@ -137,7 +137,7 @@ def rotate_image(imMat, angle, Com_x, Com_y, W, H):
     
     # Calculate the rotation matrix using getRotationMatrix2D
     M_rotate = getRotationMatrix2D(center, angle, scale)
-    
+    #print(CvMat(M_rotate))
     # Create a Mat to store the rotated output image
     imMat_out = Mat()
     
@@ -149,7 +149,45 @@ def rotate_image(imMat, angle, Com_x, Com_y, W, H):
 
     return imMat_out
 
-	
+def translate_image(imMat, Com_x, Com_y, W, H):
+    """
+    Translate the input image to reposition its center of mass (COM).
+
+    Arguments:
+    imMat -- Input image as a Mat.
+    Com_x -- X-coordinate of the center of mass.
+    Com_y -- Y-coordinate of the center of mass.
+    W -- Width of the output image.
+    H -- Height of the output image.
+
+    Returns:
+    imMat_out -- Translated image as a Mat.
+    """
+    # Calculate the correction values for centering the image
+    cntr_corec_x, cntr_corec_y = (int((W/2)) - Com_x), (int((H/2)) - Com_y)
+    
+    # Create a translation matrix
+    M_translate_mat = Mat(2, 3, 5)
+    M_translate_cvmat = CvMat(M_translate_mat)
+    
+    # Set the translation matrix values
+    cvmSet(M_translate_cvmat, 0, 0, 1)
+    cvmSet(M_translate_cvmat, 0, 1, 0)
+    cvmSet(M_translate_cvmat, 0, 2, cntr_corec_x)
+    cvmSet(M_translate_cvmat, 1, 0, 0)
+    cvmSet(M_translate_cvmat, 1, 1, 1)
+    cvmSet(M_translate_cvmat, 1, 2, cntr_corec_y)
+    
+    # Create a translation matrix
+    M_translate = Mat(M_translate_cvmat)
+    
+    # Apply translation to the input image
+    imMat_out = Mat()
+    szi = Size(int(W), int(H))
+    warpAffine(imMat, imMat_out, M_translate, szi)
+    
+    return imMat_out
+
     
 
 if __name__ in ['__main__', '__builtin__']:
@@ -172,28 +210,12 @@ if __name__ in ['__main__', '__builtin__']:
     
     # Calculate the orientation angle of the largest contour
     angle = getOrientation(largest_contour)
-    
+    # Translate the input image using the calculated translation coordinates    
+    imMat_out = translate_image(imMat,Com_x, Com_y, W, H)
     # Rotate the input image using the calculated angle and center coordinates
-    imMat_out = rotate_image(imMat, angle, Com_x, Com_y, W, H)
-    
+    imMat_out = rotate_image(imMat_out,angle,int(W/2), int(H/2), W, H)
     # Convert the rotated Mat back to ImageProcessor
     img_out = MatToImProc(imMat_out)
-    
     # Create a new ImagePlus and display the rotated image
     imp2 = ImagePlus("imp2", img_out)
     imp2.show()
-    
-    # Print some information
-    print("Height:", H)
-    print("Width:", W)
-    print("Center X:", float(Com_x))
-    print("Center Y:", float(Com_y))
-    print("Rotation Angle:", angle)
-    
-	
-
-	
-	
-	
-	
-	
