@@ -84,6 +84,7 @@ def getOrientation(largest_contour):
     """
     # Convert the largest_contour to a MatVector
     largest_contour_MV = MatVector()
+    #x,y of the points were stored as different channels, which is not very intuitive, using split made it sperate
     split(largest_contour, largest_contour_MV)
     
     # Determine the number of points in the contour
