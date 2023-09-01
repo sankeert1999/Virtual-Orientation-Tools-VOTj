@@ -1,6 +1,6 @@
 #@ImagePlus imp
-from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute
-from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours
+from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size
+from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
 from ImageConverter import ImProcToMat,MatToImProc
 from ij import ImagePlus
 import math
@@ -110,18 +110,84 @@ def getOrientation(largest_contour):
     
     return angle
 
+def rotate_image(imMat, angle, Com_x, Com_y, W, H):
+    """
+    Rotate an input image by a specified angle around a given center.
+
+    Arguments:
+    imMat -- The input image as a Mat.
+    angle -- The rotation angle in degrees.
+    Com_x -- X-coordinate of the center of rotation.
+    Com_y -- Y-coordinate of the center of rotation.
+    W -- Width of the output image.
+    H -- Height of the output image.
+
+    Returns:
+    imMat_out -- The rotated image as a Mat.
+    """
+    # Define the scale factor for the rotation
+    scale = 1.0
+    
+    # Create a Mat to store the rotation matrix
+    M_rotate = Mat()
+    
+    # Define the center of rotation as a Point2f
+    center = Point2f(float(Com_x), float(Com_y))
+    
+    # Calculate the rotation matrix using getRotationMatrix2D
+    M_rotate = getRotationMatrix2D(center, angle, scale)
+    
+    # Create a Mat to store the rotated output image
+    imMat_out = Mat()
+    
+    # Define the size of the output image as a Size
+    szi = Size(int(W), int(H))
+    
+    # Apply the affine transformation to rotate the image
+    warpAffine(imMat, imMat_out, M_rotate, szi)
+
+    return imMat_out
+
 	
     
+
 if __name__ in ['__main__', '__builtin__']:
+    # Get the height and width of the ImagePlus
+    H = imp.getHeight()
+    W = imp.getWidth()
+    
     # Convert ImageProcessor to Mat using custom ImageConverter
-    imMat = ImProcToMat(imp.getProcessor())
-    # Use the converted image as binary mask
+    ImProc = imp.getProcessor()
+    imMat = ImProcToMat(ImProc, ImProc.getBitDepth())
+    
+    # Use the converted image as a binary mask
     binary_masks = imMat
+    
     # Detect the largest contour in the binary mask
     largest_contour = detectContours(binary_masks)
+    
+    # Extract the center coordinates of the largest contour
+    Com_x, Com_y = contourCenterExtractor(largest_contour)
+    
+    # Calculate the orientation angle of the largest contour
     angle = getOrientation(largest_contour)
-    print(angle)
-
+    
+    # Rotate the input image using the calculated angle and center coordinates
+    imMat_out = rotate_image(imMat, angle, Com_x, Com_y, W, H)
+    
+    # Convert the rotated Mat back to ImageProcessor
+    img_out = MatToImProc(imMat_out)
+    
+    # Create a new ImagePlus and display the rotated image
+    imp2 = ImagePlus("imp2", img_out)
+    imp2.show()
+    
+    # Print some information
+    print("Height:", H)
+    print("Width:", W)
+    print("Center X:", float(Com_x))
+    print("Center Y:", float(Com_y))
+    print("Rotation Angle:", angle)
     
 	
 
