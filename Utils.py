@@ -1,8 +1,13 @@
-#@ImagePlus imp
+#@ File (label="Select the input file 2D") input_File
+#@ File (label="Select the mask file to the input file") Mask_File
+#@ String (choices={"Centering", "Rotation","Rotation+Centering"}, label = "Tasks", style="listBox") task
+#@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
+#@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") Center_of_rotation 
+#@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
 from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT
 from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
 from ImageConverter import ImProcToMat,MatToImProc
-from ij import ImagePlus
+from ij import ImagePlus,IJ
 import math
 
 def getMax(myList):
@@ -108,6 +113,12 @@ def getOrientation(largest_contour):
     # Calculate the angle of rotation based on eigenvectors
     angle = math.atan2(eigenvectors_cvmat.get(0, 1), eigenvectors_cvmat.get(0, 0))
     angle = int(math.degrees(angle))
+    if abs(angle) >= 180:
+        angle_final = angle - 180
+        if  angle < 0:
+            return  angle_final*(-1)
+        else:
+            return angle_final     
     
     return angle
 
@@ -217,27 +228,59 @@ def enlarge_image(imMat):
         left = (enlarged_dims - imMat.cols()) // 2
         right = (enlarged_dims - imMat.cols()) - top   
     
-    # Print the calculated dimensions and border widths
-    print(enlarged_dims, top, bottom, left, right)  
     
     # Copy the input image into the center of the enlarged square image
     copyMakeBorder(imMat, imMat_en, top, bottom, left, right, BORDER_CONSTANT, Scalar(0))
     
-    return imMat_en
+    return imMat_en,enlarged_dims
 
+def process_image(imgMat,maskMat,W,H):
+    if enlarge == "Yes":
+        imgMat,H = enlarge_image(imgMat)
+        maskMat,W = enlarge_image(maskMat)
+    # Detect the largest contour in the binary mask
+    largest_contour = detectContours(maskMat)
+    # Extract the center coordinates of the largest contour
+    Com_x, Com_y = contourCenterExtractor(largest_contour)    
+    # Calculate the orientation angle of the largest contour
+    angle = getOrientation(largest_contour)
+    if orientation == "Vertical":
+        angle = angle+90
+    if task == "Centering":
+        # Translate the input image using the calculated translation coordinates    
+        imgMat_out = translate_image(imgMat,Com_x, Com_y, W, H)
+    elif task == "Rotation":
+        if Center_of_rotation == "Image_center":
+            Com_x = int((W/2))
+            Com_y = int((H/2))
+        # Rotate the input image using the calculated angle and center coordinates
+        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)        
+    elif task == "Rotation+Centering":   
+        # Translate the input image using the calculated translation coordinates    
+        imgMat_out = translate_image(imgMat,Com_x, Com_y, W, H) 
+        # Rotate the input image using the calculated angle and center coordinates
+        imgMat_out = rotate_image(imgMat_out, angle, int(W/2), int(H/2), W, H)
     
+    return imgMat_out
 
 if __name__ in ['__main__', '__builtin__']:
+    img = IJ.openImage(str(input_File))
+    mask = IJ.openImage(str(Mask_File))
+    img.show()        
     # Get the height and width of the ImagePlus
-    H = imp.getHeight()
-    W = imp.getWidth()
-    
+    H = img.getHeight()
+    W = img.getWidth()    
     # Convert ImageProcessor to Mat using custom ImageConverter
-    ImProc = imp.getProcessor()
-    imMat = ImProcToMat(ImProc, ImProc.getBitDepth())
-    print(imMat)
-    imMat_en = enlarge_image(imMat)
-    img_out = MatToImProc(imMat_en)
+    imgProc = img.getProcessor()
+    maskProc = mask.getProcessor()
+    imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
+    maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
+
+
+    imgMat_out = process_image(imgMat,maskMat,W,H)
+    img_out = MatToImProc(imgMat_out)
     # Create a new ImagePlus and display the rotated image
     imp2 = ImagePlus("imp2", img_out)
     imp2.show()
+
+ 
