@@ -1,5 +1,5 @@
 #@ImagePlus imp
-from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet
+from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT
 from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
 from ImageConverter import ImProcToMat,MatToImProc
 from ij import ImagePlus
@@ -188,6 +188,43 @@ def translate_image(imMat, Com_x, Com_y, W, H):
     
     return imMat_out
 
+def enlarge_image(imMat):
+    """
+    Enlarge the input image to a square shape.
+
+    Arguments:
+    imMat -- Input image as a Mat.
+
+    Returns:
+    imMat_en -- Enlarged square image as a Mat.
+    """
+    # Calculate the dimensions for the enlarged square image
+    enlarged_dims = int((imMat.rows() * imMat.rows() + imMat.cols() * imMat.cols()) ** 0.5)
+    
+    # Create a new square Mat for the enlarged image
+    imMat_en = Mat(enlarged_dims, enlarged_dims, imMat.type())
+    
+    # Calculate the border widths for top, bottom, left, and right
+    if (enlarged_dims - imMat.rows()) % 2 == 0:
+        top = bottom = (enlarged_dims - imMat.rows()) // 2
+    else:
+        top = (enlarged_dims - imMat.rows()) // 2
+        bottom = (enlarged_dims - imMat.rows()) - top 
+    
+    if (enlarged_dims - imMat.cols()) % 2 == 0:
+        left = right = (enlarged_dims - imMat.cols()) // 2
+    else:
+        left = (enlarged_dims - imMat.cols()) // 2
+        right = (enlarged_dims - imMat.cols()) - top   
+    
+    # Print the calculated dimensions and border widths
+    print(enlarged_dims, top, bottom, left, right)  
+    
+    # Copy the input image into the center of the enlarged square image
+    copyMakeBorder(imMat, imMat_en, top, bottom, left, right, BORDER_CONSTANT, Scalar(0))
+    
+    return imMat_en
+
     
 
 if __name__ in ['__main__', '__builtin__']:
@@ -198,24 +235,9 @@ if __name__ in ['__main__', '__builtin__']:
     # Convert ImageProcessor to Mat using custom ImageConverter
     ImProc = imp.getProcessor()
     imMat = ImProcToMat(ImProc, ImProc.getBitDepth())
-    
-    # Use the converted image as a binary mask
-    binary_masks = imMat
-    
-    # Detect the largest contour in the binary mask
-    largest_contour = detectContours(binary_masks)
-    
-    # Extract the center coordinates of the largest contour
-    Com_x, Com_y = contourCenterExtractor(largest_contour)
-    
-    # Calculate the orientation angle of the largest contour
-    angle = getOrientation(largest_contour)
-    # Translate the input image using the calculated translation coordinates    
-    imMat_out = translate_image(imMat,Com_x, Com_y, W, H)
-    # Rotate the input image using the calculated angle and center coordinates
-    imMat_out = rotate_image(imMat_out,angle,int(W/2), int(H/2), W, H)
-    # Convert the rotated Mat back to ImageProcessor
-    img_out = MatToImProc(imMat_out)
+    print(imMat)
+    imMat_en = enlarge_image(imMat)
+    img_out = MatToImProc(imMat_en)
     # Create a new ImagePlus and display the rotated image
     imp2 = ImagePlus("imp2", img_out)
     imp2.show()
