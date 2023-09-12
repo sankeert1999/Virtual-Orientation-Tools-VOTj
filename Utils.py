@@ -77,6 +77,39 @@ def contourCenterExtractor(largest_contour):
     Com_y = int(contour_Moments.m01() / contour_Moments.m00())
     return Com_x, Com_y
    
+def small_angle_calculation(angle):
+    """
+    Calculate the equivalent small angle within the range (-90, 90).
+
+    Args:
+        angle (float): The input angle in degrees.
+
+    Returns:
+        float: The equivalent small angle within the range (-90, 90).
+    """
+    if 90 > abs(angle) > 0:
+        return angle
+    elif 180 > abs(angle) > 90:
+        angle_final = 180 - abs(angle)
+        if angle < 0:
+            angle_final = angle_final
+        else:
+            angle_final = angle_final * (-1)
+    elif 270 > abs(angle) > 180:
+        angle_final = abs(angle) - 180
+        if angle < 0:
+            angle_final = angle_final * (-1)
+        else:
+            angle_final = angle_final
+    elif 360 > abs(angle) > 270:
+        angle_final = 360 - abs(angle)
+        if angle < 0:
+            angle_final = angle_final
+        else:
+            angle_final = angle_final * (-1)
+    return angle_final
+
+
 def getOrientation(largest_contour):
     """
     Calculate the orientation angle of the largest contour.
@@ -113,13 +146,7 @@ def getOrientation(largest_contour):
     # Calculate the angle of rotation based on eigenvectors
     angle = math.atan2(eigenvectors_cvmat.get(0, 1), eigenvectors_cvmat.get(0, 0))
     angle = int(math.degrees(angle))
-    if abs(angle) >= 180:
-        angle_final = angle - 180
-        if  angle < 0:
-            return  angle_final*(-1)
-        else:
-            return angle_final     
-    
+    angle = small_angle_calculation(angle)
     return angle
 
 def rotate_image(imMat, angle, Com_x, Com_y, W, H):
