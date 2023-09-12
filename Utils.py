@@ -80,6 +80,10 @@ def contourCenterExtractor(largest_contour):
 def small_angle_calculation(angle):
     """
     Calculate the equivalent small angle within the range (-90, 90).
+    For eg : 120 -> -60
+    Avoiding large rotation angle to align teh object of interest.
+    By convention the +ve angles mean a anti-clockwise rotation and 
+    -ve mean a clockwise roation.
 
     Args:
         angle (float): The input angle in degrees.
@@ -87,26 +91,20 @@ def small_angle_calculation(angle):
     Returns:
         float: The equivalent small angle within the range (-90, 90).
     """
-    if 90 > abs(angle) > 0:
+    if 90 > abs(angle) >= 0:
         return angle
-    elif 180 > abs(angle) > 90:
+    elif 180 > abs(angle) >= 90:
         angle_final = 180 - abs(angle)
-        if angle < 0:
-            angle_final = angle_final
-        else:
-            angle_final = angle_final * (-1)
-    elif 270 > abs(angle) > 180:
+        if angle > 0:
+            angle_final = -angle_final                        
+    elif 270 > abs(angle) >= 180:
         angle_final = abs(angle) - 180
         if angle < 0:
-            angle_final = angle_final * (-1)
-        else:
-            angle_final = angle_final
-    elif 360 > abs(angle) > 270:
+            angle_final = -angle_final
+    elif 360 > abs(angle) >= 270:
         angle_final = 360 - abs(angle)
-        if angle < 0:
-            angle_final = angle_final
-        else:
-            angle_final = angle_final * (-1)
+        if angle > 0:
+            angle_final = -angle_final            
     return angle_final
 
 
@@ -144,10 +142,10 @@ def getOrientation(largest_contour):
     eigenvectors_cvmat = CvMat(eigenvectors)
     
     # Calculate the angle of rotation based on eigenvectors
-    angle = math.atan2(eigenvectors_cvmat.get(0, 1), eigenvectors_cvmat.get(0, 0))
-    angle = int(math.degrees(angle))
-    angle = small_angle_calculation(angle)
-    return angle
+    angle_orientation = math.atan2(eigenvectors_cvmat.get(0, 1), eigenvectors_cvmat.get(0, 0))  #calculating the orientation
+    angle_orientation = int(math.degrees(angle_orientation))    #converting to degrees from radians
+    angle_rotation = small_angle_calculation(angle_orientation) #calculating the smallest angle of rotation to oreint the object from the obtained orienation angle of the object 
+    return angle_rotation
 
 def rotate_image(imMat, angle, Com_x, Com_y, W, H):
     """
