@@ -232,36 +232,105 @@ def enlarge_image(imMat):
     # Copy the input image into the center of the enlarged square image
     copyMakeBorder(imMat, imMat_en, top, bottom, left, right, BORDER_CONSTANT, Scalar(0))
     
-    return imMat_en,enlarged_dims
+    return imMat_en
 
-def process_image(imgMat,maskMat,W,H):
+def compute_transformation(enlarge, orientation, imgMat, maskMat):
+    """
+    Compute image transformation parameters.
+
+    Args:
+        enlarge (str): Whether to enlarge the image ("Yes" or "No").
+        orientation (str): Orientation of the object ("Horizontal" or "Vertical").
+        imgMat (Mat): Input image plane as a Mat.
+        maskMat (Mat): Binary mask image plane as a Mat.
+
+    Returns:
+        tuple: A tuple containing:
+            Com_x (float): X-coordinate of the center of mass.
+            Com_y (float): Y-coordinate of the center of mass.
+            angle (float): Orientation angle of the largest contour.
+            imgMat (Mat): Transformed image.
+    """
+    # Check if image enlargement is requested
     if enlarge == "Yes":
-        imgMat,H = enlarge_image(imgMat)
-        maskMat,W = enlarge_image(maskMat)
+        imgMat = enlarge_image(imgMat)
+        maskMat = enlarge_image(maskMat)
+    
     # Detect the largest contour in the binary mask
     largest_contour = detectContours(maskMat)
+    
     # Extract the center coordinates of the largest contour
-    Com_x, Com_y = contourCenterExtractor(largest_contour)    
+    Com_x, Com_y = contourCenterExtractor(largest_contour)
+    
     # Calculate the orientation angle of the largest contour
     angle = getOrientation(largest_contour)
+    
+    # Adjust the angle if the orientation is specified as "Vertical"
     if orientation == "Vertical":
-        angle = angle+90
+        angle = angle + 90
+    
+    # Return the center coordinates, angle, and the transformed image
+    return Com_x, Com_y, angle, imgMat
+
+
+def apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat):
+    """
+    Apply a transformation to the input image plane based on the specified task.
+
+    Args:
+        task (str): The transformation task to perform. Options: "Centering", "Rotation", "Rotation+Centering".
+        Center_of_rotation (str): The center of rotation. Options: "Image_center".
+        Com_x (float): X-coordinate of the center of mass.
+        Com_y (float): Y-coordinate of the center of mass.
+        angle (float): The rotation angle (in degrees).
+        imgMat (Mat): Input image as a Mat.
+
+    Returns:
+        imgMat_out: Transformed image as a Mat.
+    """
+    W, H = imgMat.cols(), imgMat.rows()
+
     if task == "Centering":
-        # Translate the input image using the calculated translation coordinates    
-        imgMat_out = translate_image(imgMat,Com_x, Com_y, W, H)
+        # Translate the input image using the calculated translation coordinates
+        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
     elif task == "Rotation":
         if Center_of_rotation == "Image_center":
             Com_x = int((W/2))
             Com_y = int((H/2))
         # Rotate the input image using the calculated angle and center coordinates
-        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)        
-    elif task == "Rotation+Centering":   
-        # Translate the input image using the calculated translation coordinates    
-        imgMat_out = translate_image(imgMat,Com_x, Com_y, W, H) 
+        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)
+    elif task == "Rotation+Centering":
+        # Translate the input image using the calculated translation coordinates
+        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
         # Rotate the input image using the calculated angle and center coordinates
         imgMat_out = rotate_image(imgMat_out, angle, int(W/2), int(H/2), W, H)
+
+    return imgMat_out
+
+
+def process_image_plane(task, orientation, Center_of_rotation, enlarge, imgMat, maskMat):
+    """
+    Process an image plane by applying transformations.
+
+    Args:
+        task (str): Task identifier.
+        orientation (str): Orientation of the transformation.
+        Center_of_rotation (bool): Whether to rotate around the center of rotation.
+        enlarge (str): Whether to enlarge the image.
+        imgMat (Mat): Input image as a Mat.
+        maskMat (Mat): Binary mask for the image.
+
+    Returns:
+        imgMat_out (Mat): Transformed image as a Mat.
+    """
+    # Compute the transformation parameters
+    Com_x, Com_y, angle, imgMat = compute_transformation(enlarge, orientation, imgMat, maskMat)
+    
+    # Apply the computed transformation
+    imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
     
     return imgMat_out
+
 
 if __name__ in ['__main__', '__builtin__']:
     img = IJ.openImage(str(input_File))
@@ -275,9 +344,7 @@ if __name__ in ['__main__', '__builtin__']:
     maskProc = mask.getProcessor()
     imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
     maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
-
-
-    imgMat_out = process_image(imgMat,maskMat,W,H)
+    imgMat_out = process_image_plane(task,orientation,Center_of_rotation,enlarge,imgMat,maskMat)
     img_out = MatToImProc(imgMat_out)
     # Create a new ImagePlus and display the rotated image
     imp2 = ImagePlus("imp2", img_out)
