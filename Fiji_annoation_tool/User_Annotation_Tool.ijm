@@ -35,7 +35,7 @@ Dialog.addChoice("Type:", newArray("2D","2D Image Sequence","3D multi slice anno
 Dialog.show();	
 myChoice  = Dialog.getChoice();
 outputDir  = getDirectory("Select the output directory to save the binary mask");
-print(outputDir)
+//print(outputDir)
 
 
 function annoateImage(){
@@ -129,3 +129,4 @@ if (myChoice == "2D Image Sequence"){
 	close("*");
 	print("You have done your part");
 }
+close("*");
