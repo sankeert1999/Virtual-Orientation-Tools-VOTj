@@ -387,57 +387,41 @@ def process_input_img(task, orientation, Center_of_rotation, enlarge, channels, 
     # Initialize a list to store image processors
     ip_list = []
 
-    if mask.getNDimensions() == 3:
-        stack_Size = mask.getStackSize()
-        for stack_Index in range(1, (stack_Size + 1)):
-            mask.setPosition(stack_Index)
-            maskProc = mask.getProcessor()
-            # Convert image and mask processors to matrices
-            maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
-            Com_x, Com_y, angle = compute_transformation(enlarge, orientation, maskMat)
-
-            if frames > 1:
-                for z_slice in range(1, (slices + 1)):
-                    for channel_index in range(1, (channels + 1)):
-                        img.setPosition(channel_index, z_slice, stack_Index)
-                        imgProc = img.getProcessor()
-                        imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
-                        # Apply transformation to the image
-                        imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
-                        # Convert the transformed image back to ImageProcessor
-                        img_out = MatToImProc(imgMat_out)
-                        # Append the transformed image to the list
-                        ip_list.append(img_out)
-            elif frames == 1 and slices > 1:
-                for channel_index in range(1, (channels + 1)):
-                    img.setPosition(channel_index, stack_Index, 1)
-                    imgProc = img.getProcessor()
-                    imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
-                    # Apply transformation to the image
-                    imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
-                    # Convert the transformed image back to ImageProcessor
-                    img_out = MatToImProc(imgMat_out)
-                    # Append the transformed image to the list
-                    ip_list.append(img_out)
-
-    elif mask.getNDimensions() == 2:
+    # mask has a single slice, then compute transformation once for all and use it for all timepoints
+    if mask.getStackSize() == 1: 
+        
         maskProc = mask.getProcessor()
+        
         # Convert image and mask processors to matrices
         maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
         Com_x, Com_y, angle = compute_transformation(enlarge, orientation, maskMat)
+    
+    
+    # Main for loop, aligning each timepoint individually if the input mask has 1 slice per timepoint
+    for t in range(img.getNFrames()):
+        
+        # if a stack is provided for the mask then compute the transformation for each timepoint, taking the correspondind slice from the mask 
+        if mask.getStackSize() > 2: 
+            maskProc = mask.getProcessor(t)
+            maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
+            Com_x, Com_y, angle = compute_transformation(enlarge, orientation, maskMat)
+            
+        # Then align all slices the same way, and for each Z-slice also each channel
+        for z in range(img.getNSlices()):
+            for channel in range(image.getNChannels()):
+                img.setPosition(c, z, t)
+                imgProc = img.getProcessor()
+                imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
+                
+                # Apply transformation to the image
+                imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
+                
+                # Convert the transformed image back to ImageProcessor
+                img_out = MatToImProc(imgMat_out)
+                
+                # Append the transformed image to the list
+                ip_list.append(img_out)
 
-        for frame_index in range(1, (frames + 1)):
-            for z_slice in range(1, (slices + 1)):
-                for channel_index in range(1, (channels + 1)):
-                    img.setPosition(channel_index, z_slice, frame_index)
-                    imgProc = img.getProcessor()
-                    imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
-                    # Apply transformation to the image
-                    imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
-                    # Convert the transformed image back to ImageProcessor
-                    img_out = MatToImProc(imgMat_out)
-                    # Append the transformed image to the list
-                    ip_list.append(img_out)
     return ip_list
 
   
