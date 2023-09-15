@@ -8,6 +8,7 @@ from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,
 from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
 from ImageConverter import ImProcToMat,MatToImProc
 from ij import ImagePlus,IJ,ImageStack
+from ij.plugin import HyperStackConverter
 import math
 
 def getMax(myList):
@@ -259,7 +260,7 @@ def enlarge_image(imMat):
     
     return imMat_en
 
-def compute_transformation(enlarge, orientation, imgMat, maskMat):
+def compute_transformation(enlarge, orientation, maskMat):
     """
     Compute image transformation parameters.
 
@@ -278,7 +279,6 @@ def compute_transformation(enlarge, orientation, imgMat, maskMat):
     """
     # Check if image enlargement is requested
     if enlarge == "Yes":
-        imgMat = enlarge_image(imgMat)
         maskMat = enlarge_image(maskMat)
     
     # Detect the largest contour in the binary mask
@@ -295,7 +295,7 @@ def compute_transformation(enlarge, orientation, imgMat, maskMat):
         angle = angle + 90
     
     # Return the center coordinates, angle, and the transformed image
-    return Com_x, Com_y, angle, imgMat
+    return Com_x, Com_y, angle
 
 
 def apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat):
@@ -313,6 +313,9 @@ def apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat):
     Returns:
         imgMat_out: Transformed image as a Mat.
     """
+    if enlarge == "Yes":
+        imgMat = enlarge_image(imgMat)
+    
     W, H = imgMat.cols(), imgMat.rows()
 
     if task == "Centering":
@@ -332,132 +335,152 @@ def apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat):
 
     return imgMat_out
 
-
-def process_image_plane(task, orientation, Center_of_rotation, enlarge,img_Title,img,mask):
+def input_image_metadata_extractor(img):
     """
-    Orienting the object of intrest in a 2D image plane by applying appropriate transformations.
+    Extract metadata from an input image.
 
     Args:
-        task (str): Task identifier.
-        orientation (str): Orientation of the object ("Horizontal" or "Vertical").
-        Center_of_rotation (str): The center of rotation. Options: "Image_center","Object_center".
-        enlarge (str): Whether to enlarge the image. ("Yes" or "No").
-        img_Title : Input image title
-        img (Mat): Input image.
-        mask (Mat): Binary mask for the image.
+        img: Input image.
 
     Returns:
-        imp_out: Transformed image as an ImagePlus.
+        img_Title (str): Title of the image.
+        img_Bit_Depth (int): Bit depth of the image.
+        height (int): Height of the image.
+        width (int): Width of the image.
+        dimension (int): Number of dimensions of the image.
+        channels (int): Number of channels in the image.
+        slices (int): Number of slices in the image.
+        frames (int): Number of frames in the image.
     """
-    # Obtaining the image processor of input image, followed by converting ImageProcessor to Mat using custom ImageConverter
-    imgProc = img.getProcessor()
-    maskProc = mask.getProcessor()
-    imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
-    maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
-
-    # Compute the transformation parameters
-    Com_x, Com_y, angle, imgMat = compute_transformation(enlarge, orientation, imgMat, maskMat)
+    img_Title = img.getTitle()
+    img_Bit_Depth = img.getBitDepth()
+    height = img.getHeight()
+    width = img.getWidth()
+    dimension = img.getNDimensions()
+    channels = img.getNChannels()
+    slices = img.getNSlices()
+    frames = img.getNFrames()
     
-    # Apply the computed transformation
-    imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
-    img_out = MatToImProc(imgMat_out)
+    return img_Title, img_Bit_Depth, height, width, dimension, channels, slices, frames
 
-    # Create a new ImagePlus and display the oriented image
-    imp_out = ImagePlus(img_Title, img_out)
-    return imp_out
 
-def process_3d_stack(task, orientation, Center_of_rotation, enlarge, img_Title, img, mask):
+
+
+def process_input_img(task, orientation, Center_of_rotation, enlarge, channels, slices, frames, img, mask):
     """
-    Orient the object of interest in a 3D stack by applying appropriate transformations.
+    Process input images based on specified transformations.
 
     Args:
         task (str): Task identifier.
-        orientation (str): Orientation of the object ("Horizontal" or "Vertical").
-        Center_of_rotation (str): The center of rotation. Options: "Image_center", "Object_center".
-        enlarge (str): Whether to enlarge the image. ("Yes" or "No").
-        img_Title (str): Input image title.
-        img (Mat): Input image.
-        mask (Mat): Binary mask for the image.
+        orientation (str): Orientation of transformation.
+        Center_of_rotation (float): Center of rotation angle.
+        enlarge (str): Whether to enlarge the images.
+        channels (int): Number of channels.
+        slices (int): Number of slices.
+        frames (int): Number of frames.
+        img (ImageStack): Input image stack.
+        mask (ImageStack): Binary mask stack.
 
     Returns:
-        imp_out: Transformed image as an ImagePlus.
+        list: List of processed ImageProcessors.
     """
-
     # Initialize a list to store image processors
     ip_list = []
 
-    # Get the size of the image stack
-    stack_Size = img.getStackSize()
-
-    # Check if the mask is 3D or 2D
     if mask.getNDimensions() == 3:
+        stack_Size = mask.getStackSize()
         for stack_Index in range(1, (stack_Size + 1)):
-            # Set the current stack position for both image and mask
-            img.setPosition(stack_Index)
-            imgProc = img.getProcessor()
             mask.setPosition(stack_Index)
             maskProc = mask.getProcessor()
-
             # Convert image and mask processors to matrices
-            imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
             maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
+            Com_x, Com_y, angle = compute_transformation(enlarge, orientation, maskMat)
 
-            # Compute transformation parameters
-            Com_x, Com_y, angle, imgMat = compute_transformation(enlarge, orientation, imgMat, maskMat)
-
-            # Apply transformation to the image
-            imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
-
-            # Convert the transformed image back to ImageProcessor
-            img_out = MatToImProc(imgMat_out)
-
-            # Append the transformed image to the list
-            ip_list.append(img_out)
+            if frames > 1:
+                for z_slice in range(1, (slices + 1)):
+                    for channel_index in range(1, (channels + 1)):
+                        img.setPosition(channel_index, z_slice, stack_Index)
+                        imgProc = img.getProcessor()
+                        imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
+                        # Apply transformation to the image
+                        imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
+                        # Convert the transformed image back to ImageProcessor
+                        img_out = MatToImProc(imgMat_out)
+                        # Append the transformed image to the list
+                        ip_list.append(img_out)
+            elif frames == 1 and slices > 1:
+                for channel_index in range(1, (channels + 1)):
+                    img.setPosition(channel_index, stack_Index, 1)
+                    imgProc = img.getProcessor()
+                    imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
+                    # Apply transformation to the image
+                    imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
+                    # Convert the transformed image back to ImageProcessor
+                    img_out = MatToImProc(imgMat_out)
+                    # Append the transformed image to the list
+                    ip_list.append(img_out)
 
     elif mask.getNDimensions() == 2:
-        img.setPosition(1)
-        imgProc = img.getProcessor()
         maskProc = mask.getProcessor()
-
         # Convert image and mask processors to matrices
-        imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
         maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
+        Com_x, Com_y, angle = compute_transformation(enlarge, orientation, maskMat)
 
-        # Compute transformation parameters (using the first slice)
-        Com_x, Com_y, angle, _ = compute_transformation(enlarge, orientation, imgMat, maskMat)
+        for frame_index in range(1, (frames + 1)):
+            for z_slice in range(1, (slices + 1)):
+                for channel_index in range(1, (channels + 1)):
+                    img.setPosition(channel_index, z_slice, frame_index)
+                    imgProc = img.getProcessor()
+                    imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
+                    # Apply transformation to the image
+                    imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
+                    # Convert the transformed image back to ImageProcessor
+                    img_out = MatToImProc(imgMat_out)
+                    # Append the transformed image to the list
+                    ip_list.append(img_out)
+    return ip_list
 
-        for stack_Index in range(1, (stack_Size + 1)):
-            # Set the current stack position for the image
-            img.setPosition(stack_Index)
-            imgProc = img.getProcessor()
+  
 
-            # Convert image processor to matrix
-            imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
 
-            # Enlarge the image if required
-            if enlarge == "Yes":
-                imgMat = enlarge_image(imgMat)
+def output_image_maker(dimension, img_Title, ip_list):
+    """
+    Create and return an ImagePlus object based on the given dimension, image title, and list of image processors.
 
-            # Apply transformation to the image
-            imgMat_out = apply_transformation(task, Center_of_rotation, Com_x, Com_y, angle, imgMat)
+    Args:
+        dimension (int): The dimension of the output image (2, 3, or more).
+        img_Title (str): The title for the output image.
+        ip_list (list): List of ImageProcessor objects for the output image.
 
-            # Convert the transformed image back to ImageProcessor
-            img_out = MatToImProc(imgMat_out)
+    Returns:
+        ImagePlus: The created ImagePlus object.
+    """
+    if dimension == 2:
+        # Create a new ImagePlus for a 2D image and display it
+        imp_out = ImagePlus(img_Title, ip_list[0])
 
-            # Append the transformed image to the list
-            ip_list.append(img_out)
+    elif dimension == 3:
+        # Create an output image stack
+        stack_out = ImageStack()
+        # Add transformed slices to the output stack
+        for ip in ip_list:
+            stack_out.addSlice(ip)
+        # Create an ImagePlus from the output stack
+        imp_out = ImagePlus(img_Title, stack_out)
+        imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames)
 
-    # Create an output image stack
-    stack_out = ImageStack()
-
-    # Add transformed slices to the output stack
-    for ip in ip_list:
-        stack_out.addSlice(ip)
-
-    # Create an ImagePlus from the output stack
-    imp_out = ImagePlus(img_Title, stack_out)
-
+    elif dimension > 3:
+        stack_out = ImageStack()
+        # Add transformed slices to the output stack
+        for ip in ip_list:
+            stack_out.addSlice(ip)
+        # Create an ImagePlus from the output stack
+        imp_out = ImagePlus(img_Title, stack_out)
+        imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames)
+    
     return imp_out
+
+
 
 
 
@@ -465,21 +488,11 @@ if __name__ in ['__main__', '__builtin__']:
     img = IJ.openImage(str(input_File))
     mask = IJ.openImage(str(Mask_File))
     img.show()
-    img_Title = img.getTitle()
-    img_Bit_Depth = img.getBitDepth()
-    height = img.getHeight()
-    width = img.getWidth()     
-    dimension = img.getNDimensions()
-    channels = img.getNChannels()
-    slices = img.getNSlices()
-    frames = img.getNFrames()
-    if dimension == 2:
-        imp_out = process_image_plane(task, orientation, Center_of_rotation, enlarge,img_Title,img,mask)
-        imp_out.show()
-    elif dimension == 3:
-        imp_out = process_3d_stack(task,orientation,Center_of_rotation,enlarge,img_Title,img,mask)
-        imp_out.show()
-
+    img_Title, img_Bit_Depth,height,width,dimension,channels,slices,frames = input_image_metadata_extractor(img)
+    ip_list = process_input_img(task, orientation, Center_of_rotation, enlarge,channels,slices,frames,img,mask)
+    imp_out = output_image_maker(dimension,img_Title, ip_list)
+    imp_out.show()
+    
     
 
  
