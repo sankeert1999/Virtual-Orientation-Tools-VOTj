@@ -8,7 +8,7 @@ from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,
 from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
 from ijopencv.ij      import ImagePlusMatConverter as imp2mat
 from ijopencv.opencv  import MatImagePlusConverter as mat2ip
-from ij import ImagePlus,IJ,ImageStack
+from ij import ImagePlus,IJ,ImageStack,CompositeImage
 from ij.plugin import HyperStackConverter
 import math
 
@@ -435,7 +435,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
   
 
 
-def output_image_maker(ip_list, channels, slices, frames,dimension, img_Title):
+def output_image_maker(img, ip_list, channels, slices, frames,dimension, img_Title):
     """
     Create and return an ImagePlus object based on the given dimension, image title, and list of image processors.
 
@@ -449,7 +449,9 @@ def output_image_maker(ip_list, channels, slices, frames,dimension, img_Title):
     if len(ip_list) == 1:
         # Create a new ImagePlus for a 2D image and display it
         imp_out = ImagePlus(img_Title, ip_list[0])
-
+        input_max_display_value = img.getDisplayRangeMax()
+        input_min_display_value = img.getDisplayRangeMin()
+        imp_out.setDisplayRange(input_min_display_value,input_max_display_value)
     else:
         # Create an output image stack
         stack_out = ImageStack()
@@ -458,9 +460,18 @@ def output_image_maker(ip_list, channels, slices, frames,dimension, img_Title):
             stack_out.addSlice(ip)
         # Create an ImagePlus from the output stack
         imp_out = ImagePlus(img_Title, stack_out)
+        input_max_display_value = img.getDisplayRangeMax()
+        input_min_display_value = img.getDisplayRangeMin()
+        imp_out.setDisplayRange(input_min_display_value,input_max_display_value)
         if channels == 1 and dimension == 3:
-            return imp_out
-        imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames)
+            return imp_out        
+        if channels > 1:
+            imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames,img.getModeAsString())
+            for channel_index in range(1,channels+1):
+                channel_LUT=img.getChannelLut(channel_index)
+                imp_out.setChannelLut(channel_LUT,channel_index)
+        else:
+            imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames)
 
     return imp_out
 
@@ -474,7 +485,7 @@ if __name__ in ['__main__', '__builtin__']:
     img.show()
     img_Title, img_Bit_Depth,height,width,dimension,channels,slices,frames = input_image_metadata_extractor(img)
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
-    imp_out = output_image_maker(ip_list, channels, slices, frames,dimension,img_Title)
+    imp_out = output_image_maker(img, ip_list, channels, slices, frames,dimension, img_Title)
     imp_out.show()
     
     
