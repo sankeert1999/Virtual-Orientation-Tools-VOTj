@@ -435,7 +435,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
   
 
 
-def output_image_maker(ip_list, channels, slices, frames, img_Title):
+def output_image_maker(ip_list, channels, slices, frames,dimension, img_Title):
     """
     Create and return an ImagePlus object based on the given dimension, image title, and list of image processors.
 
@@ -458,8 +458,9 @@ def output_image_maker(ip_list, channels, slices, frames, img_Title):
             stack_out.addSlice(ip)
         # Create an ImagePlus from the output stack
         imp_out = ImagePlus(img_Title, stack_out)
-        if channels > 1:
-            imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames)
+        if channels == 1 and dimension == 3:
+            return imp_out
+        imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames)
 
     return imp_out
 
@@ -473,7 +474,7 @@ if __name__ in ['__main__', '__builtin__']:
     img.show()
     img_Title, img_Bit_Depth,height,width,dimension,channels,slices,frames = input_image_metadata_extractor(img)
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
-    imp_out = output_image_maker(ip_list, channels, slices, frames, img_Title)
+    imp_out = output_image_maker(ip_list, channels, slices, frames,dimension,img_Title)
     imp_out.show()
     
     
