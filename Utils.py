@@ -402,7 +402,7 @@ def process_input_img(task, orientation, Center_of_rotation, enlarge, channels, 
         
         # if a stack is provided for the mask then compute the transformation for each timepoint, taking the correspondind slice from the mask 
         if mask.getStackSize() > 2: 
-            maskProc = mask.getProcessor(t)
+            maskProc = mask.getStack().getProcessor(t)
             maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
             Com_x, Com_y, angle = compute_transformation(enlarge, orientation, maskMat)
             
