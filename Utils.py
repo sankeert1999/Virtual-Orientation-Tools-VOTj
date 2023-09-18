@@ -1,4 +1,4 @@
-#@ File (label="Select the input file 2D") input_File
+#@ File (label="Select the input file") input_File
 #@ File (label="Select the mask file to the input file") Mask_File
 #@ String (choices={"Centering", "Rotation","Rotation+Centering"}, label = "Tasks", style="listBox") task
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
