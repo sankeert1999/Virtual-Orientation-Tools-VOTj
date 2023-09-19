@@ -456,6 +456,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
     """
     # Initialize a list to store image processors
     ip_list = []
+    current_status = 0
 
     # Check if the mask has 3 dimensions
     if mask.getNDimensions() == 3:
@@ -471,6 +472,8 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
             if img.getNFrames() > 1:
                 for z_slice in range(1, (img.getNSlices() + 1)):
                     for channel_index in range(1, (img.getNChannels() + 1)):
+                        current_status = current_status + 1
+                        IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
                         img_out = transform_input_img(img, channel_index, z_slice, stack_Index, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                         # Append the transformed image to the list
                         ip_list.append(img_out)
@@ -478,6 +481,8 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
             # If the input image has only one frame and multiple slices
             elif img.getNFrames() == 1 and img.getNSlices() > 1:
                 for channel_index in range(1, (img.getNChannels() + 1)):
+                    current_status = current_status + 1
+                    IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
                     img_out = transform_input_img(img, channel_index, stack_Index, img.getNFrames(), task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
@@ -491,23 +496,27 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
         for frame_index in range(1, (img.getNFrames() + 1)):
             for z_slice in range(1, (img.getNSlices() + 1)):
                 for channel_index in range(1, (img.getNChannels() + 1)):
+                    current_status = current_status + 1
+                    IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
                     img_out = transform_input_img(img, channel_index, z_slice, frame_index, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
 
-    return ip_list
+    return ip_list  
 
 
-  
-
-
-def output_image_maker(img, ip_list, channels, slices, frames,dimension, img_Title):
+def output_image_maker(img, ip_list, channels, slices, frames, dimension, img_Title):
     """
     Create and return an ImagePlus object based on the given dimension, image title, and list of image processors.
 
     Args:
-        img_Title (str): The title for the output image.
+        img (ImagePlus): The input ImagePlus object.
         ip_list (list): List of ImageProcessor objects for the output image.
+        channels (int): Number of channels in the image.
+        slices (int): Number of slices in the image.
+        frames (int): Number of frames in the image.
+        dimension (int): The dimension of the image (2D or 3D).
+        img_Title (str): The title for the output image.
 
     Returns:
         ImagePlus: The created ImagePlus object.
@@ -517,7 +526,9 @@ def output_image_maker(img, ip_list, channels, slices, frames,dimension, img_Tit
         imp_out = ImagePlus(img_Title, ip_list[0])
         input_max_display_value = img.getDisplayRangeMax()
         input_min_display_value = img.getDisplayRangeMin()
-        imp_out.setDisplayRange(input_min_display_value,input_max_display_value)
+        imp_out.setDisplayRange(input_min_display_value, input_max_display_value)
+        luts = img.getLuts()
+        imp_out.setLut(luts[0])
     else:
         # Create an output image stack
         stack_out = ImageStack()
@@ -526,23 +537,23 @@ def output_image_maker(img, ip_list, channels, slices, frames,dimension, img_Tit
             stack_out.addSlice(ip)
         # Create an ImagePlus from the output stack
         imp_out = ImagePlus(img_Title, stack_out)
-        input_max_display_value = img.getDisplayRangeMax()
-        input_min_display_value = img.getDisplayRangeMin()
-        imp_out.setDisplayRange(input_min_display_value,input_max_display_value)
         if channels == 1 and dimension == 3:
-            return imp_out        
+            luts = img.getLuts()
+            if len(luts) > 0:
+                imp_out.setLut(luts[0])
+            return imp_out
         if channels > 1:
-            imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames,img.getModeAsString())
-            for channel_index in range(1,channels+1):
-                channel_LUT=img.getChannelLut(channel_index)
-                imp_out.setChannelLut(channel_LUT,channel_index)
+            imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames, img.getModeAsString())
+            for channel_index in range(1, channels + 1):
+                channel_LUT = img.getChannelLut(channel_index)
+                imp_out.setChannelLut(channel_LUT, channel_index)
         else:
             imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames)
+            luts = img.getLuts()
+            if len(luts) > 0:
+                imp_out.setLut(luts[0])
 
     return imp_out
-
-
-
 
 
 if __name__ in ['__main__', '__builtin__']:
