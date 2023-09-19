@@ -443,8 +443,8 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
     Process input images based on specified transformations.
 
     Args:
-        img (ImageStack): Input image stack.
-        mask (ImageStack): Binary mask stack.
+        img (ImagePlus): Input image stack.
+        mask (ImagePlus): Binary mask stack.
         task (str): Task identifier.
         orientation (str): Orientation of transformation.
         center_of_rotation (float): Center of rotation angle.
