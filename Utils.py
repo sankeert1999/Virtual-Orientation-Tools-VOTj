@@ -4,6 +4,7 @@
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
 #@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
+from opcode import hasjabs
 from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT
 from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
 from ijopencv.ij      import ImagePlusMatConverter as imp2mat
@@ -79,35 +80,57 @@ def contourCenterExtractor(largest_contour):
     Com_y = int(contour_Moments.m01() / contour_Moments.m00())
     return Com_x, Com_y
    
-def small_angle_calculation(angle):
+def small_angle_calculation(angle,orientation):
     """
     Calculate the equivalent small angle within the range (-90, 90).
-    For eg : 120 -> -60
+    
+    For example: 120 -> -60 (horizontal) 30 (vertical)
     Avoiding large rotation angle to align the object of interest.
-    By convention the positive angles mean a anti-clockwise rotation and 
-    negative mean a clockwise roation.
+    By convention, positive angles mean an anti-clockwise rotation, and 
+    negative mean a clockwise rotation.
 
     Args:
         angle (float): The input angle in degrees.
+        orientation (str): The orientation of the angle ("Vertical" or "Horizontal").
 
     Returns:
         float: The equivalent small angle within the range (-90, 90).
     """
-    if 90 > abs(angle) >= 0:
-        return angle
-    elif 180 > abs(angle) >= 90:
-        angle_final = 180 - abs(angle)
-        if angle > 0:
-            angle_final = -angle_final                        
-    elif 270 > abs(angle) >= 180:
-        angle_final = abs(angle) - 180
-        if angle < 0:
-            angle_final = -angle_final
-    elif 360 >= abs(angle) >= 270:
-        angle_final = 360 - abs(angle)
-        if angle > 0:
-            angle_final = -angle_final            
-    return angle_final
+    if orientation == "Vertical":
+        if 90 > abs(angle) >= 0:
+            angle_final = 90 - abs(angle)
+            if angle > 0:
+                angle_final = -angle_final  
+        elif 180 > abs(angle) >= 90:
+            angle_final = abs(angle) - 90
+            if angle < 0:
+                angle_final = -angle_final                        
+        elif 270 > abs(angle) >= 180:
+            angle_final = 270 - abs(angle)
+            if angle > 0:
+                angle_final = -angle_final
+        elif 360 >= abs(angle) >= 270:
+            angle_final = abs(angle) - 270
+            if angle < 0:
+                angle_final = -angle_final            
+        return angle_final
+    
+    else:
+        if 90 > abs(angle) >= 0:
+            return angle
+        elif 180 > abs(angle) >= 90:
+            angle_final = 180 - abs(angle)
+            if angle > 0:
+                angle_final = -angle_final                        
+        elif 270 > abs(angle) >= 180:
+            angle_final = abs(angle) - 180
+            if angle < 0:
+                angle_final = -angle_final
+        elif 360 >= abs(angle) >= 270:
+            angle_final = 360 - abs(angle)
+            if angle > 0:
+                angle_final = -angle_final            
+        return angle_final
 
 
 def getOrientation(largest_contour):
@@ -146,8 +169,7 @@ def getOrientation(largest_contour):
     # Calculate the angle of rotation based on eigenvectors
     angle_orientation = math.atan2(eigenvectors_cvmat.get(0, 1), eigenvectors_cvmat.get(0, 0))  #calculating the orientation
     angle_orientation = int(math.degrees(angle_orientation))    #converting to degrees from radians
-    angle_rotation = small_angle_calculation(angle_orientation) #calculating the smallest angle of rotation to oreint the object from the obtained orienation angle of the object 
-    return angle_rotation
+    return angle_orientation
 
 def rotate_image(imMat, angle, Com_x, Com_y, W, H):
     """
@@ -293,10 +315,12 @@ def compute_transformation(maskProc, enlarge, orientation):
     
     # Calculate the orientation angle of the largest contour
     angle = getOrientation(largest_contour)
+
+    angle = small_angle_calculation(angle, orientation) #calculating the smallest angle of rotation to oreint the object from the obtained orienation angle of the object 
     
     # Adjust the angle if the orientation is specified as "Vertical"
-    if orientation == "Vertical":
-        angle = angle + 90
+    #if orientation == "Vertical":
+    #    angle = angle + 90
     
     # Return the center coordinates, angle, and the transformed image
     return Com_x, Com_y, angle
