@@ -4,6 +4,7 @@
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
 #@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
+from opcode import hasjabs
 from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT
 from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
 from ijopencv.ij      import ImagePlusMatConverter as imp2mat
@@ -79,9 +80,10 @@ def contourCenterExtractor(largest_contour):
     Com_y = int(contour_Moments.m01() / contour_Moments.m00())
     return Com_x, Com_y
    
-def small_angle_calculation(angle,orientation):
+def getCorrectingAngle(angle,orientation):
     """
-    Calculate the equivalent small angle within the range (-90, 90).
+    The input angle is the orientation of teh object of interest which can span from (-360,360)
+    with this function equivalent small angle within the range (-90, 90) is calculated.
     
     For example: 120 -> -60 (horizontal) 30 (vertical)
     Avoiding large rotation angle to align the object of interest.
@@ -315,7 +317,7 @@ def compute_transformation(maskProc, enlarge, orientation):
     # Calculate the orientation angle of the largest contour
     angle = getOrientation(largest_contour)
 
-    angle = small_angle_calculation(angle, orientation) #calculating the smallest angle of rotation to oreint the object from the obtained orienation angle of the object 
+    angle = getCorrectingAngle(angle, orientation) #calculating the smallest angle of rotation to oreint the object from the obtained orienation angle of the object 
     
     # Adjust the angle if the orientation is specified as "Vertical"
     #if orientation == "Vertical":
@@ -325,7 +327,7 @@ def compute_transformation(maskProc, enlarge, orientation):
     return Com_x, Com_y, angle
 
 
-def apply_transformation(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle):
+def transform_image_plane(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle):
     """
     Apply a transformation to the input image based on the specified task.
 
@@ -370,45 +372,12 @@ def apply_transformation(imgProc, task, center_of_rotation, enlarge, Com_x, Com_
 
     return img_out
 
-
-def input_image_metadata_extractor(img):
-    """
-    Extract metadata from an input image.
-
-    Args:
-        img: Input image.
-
-    Returns:
-        img_Title (str): Title of the image.
-        img_Bit_Depth (int): Bit depth of the image.
-        height (int): Height of the image.
-        width (int): Width of the image.
-        dimension (int): Number of dimensions of the image.
-        channels (int): Number of channels in the image.
-        slices (int): Number of slices in the image.
-        frames (int): Number of frames in the image.
-    """
-    img_Title = img.getTitle()
-    img_Bit_Depth = img.getBitDepth()
-    height = img.getHeight()
-    width = img.getWidth()
-    dimension = img.getNDimensions()
-    channels = img.getNChannels()
-    slices = img.getNSlices()
-    frames = img.getNFrames()
-    
-    return img_Title, img_Bit_Depth, height, width, dimension, channels, slices, frames
-
-
-def transform_input_img(img, channel_index, z_slice, frame_index, task, center_of_rotation, enlarge, Com_x, Com_y, angle):
+def transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle):
     """
     Transform the input image based on specified parameters.
 
     Args:
         img: The input image.
-        channel_index (int): The index of the channel.
-        z_slice (int): The z-slice index.
-        frame_index (int): The frame index.
         task (str): The transformation task ("Rotation", "Rotation+Centering", or "No Rotation").
         center_of_rotation: The center of rotation coordinates.
         enlarge (str): Whether to enlarge the image ("Yes" or "No").
@@ -419,21 +388,19 @@ def transform_input_img(img, channel_index, z_slice, frame_index, task, center_o
     Returns:
         img_out: The transformed image.
     """
-    # Set the position of the input image
-    img.setPositionWithoutUpdate(channel_index, z_slice, frame_index)
     imgProc = img.getProcessor()
 
     if angle == 0 and task == "Rotation":
         task = "No Rotation"
         # Apply transformation to the image
-        img_out = apply_transformation(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+        img_out = transform_image_plane(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
     elif angle == 0 and task == "Rotation+Centering":
         task = "Centering"
         # Apply transformation to the image
-        img_out = apply_transformation(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+        img_out = transform_image_plane(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
     else:
         # Apply transformation to the image
-        img_out = apply_transformation(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+        img_out = transform_image_plane(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
 
     return img_out
 
@@ -442,9 +409,12 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
     """
     Process input images based on specified transformations.
 
+    This function takes input images and masks, applies transformations according to the specified task, orientation,
+    and other parameters, and returns a list of processed images.
+
     Args:
-        img (ImagePlus): Input image stack.
-        mask (ImagePlus): Binary mask stack.
+        img (ImageStack): Input image stack.
+        mask (ImageStack): Binary mask stack.
         task (str): Task identifier.
         orientation (str): Orientation of transformation.
         center_of_rotation (float): Center of rotation angle.
@@ -473,7 +443,9 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
                     for channel_index in range(1, (img.getNChannels() + 1)):
                         current_status = current_status + 1
                         IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
-                        img_out = transform_input_img(img, channel_index, z_slice, stack_Index, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                        # Set the position of the input image
+                        img.setPositionWithoutUpdate(channel_index, z_slice, stack_Index)
+                        img_out = transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                         # Append the transformed image to the list
                         ip_list.append(img_out)
 
@@ -482,7 +454,8 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
                 for channel_index in range(1, (img.getNChannels() + 1)):
                     current_status = current_status + 1
                     IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
-                    img_out = transform_input_img(img, channel_index, stack_Index, img.getNFrames(), task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                    img.setPositionWithoutUpdate(channel_index, stack_Index, img.getNFrames())
+                    img_out = transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
 
@@ -497,32 +470,28 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
                 for channel_index in range(1, (img.getNChannels() + 1)):
                     current_status = current_status + 1
                     IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
-                    img_out = transform_input_img(img, channel_index, z_slice, frame_index, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                    img.setPositionWithoutUpdate(channel_index, z_slice, frame_index)
+                    img_out = transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
 
-    return ip_list  
+    return ip_list
 
 
-def output_image_maker(img, ip_list, channels, slices, frames, dimension, img_Title):
+
+def output_image_maker(img, ip_list):
     """
     Create and return an ImagePlus object based on the given dimension, image title, and list of image processors.
 
     Args:
         img (ImagePlus): The input ImagePlus object.
         ip_list (list): List of ImageProcessor objects for the output image.
-        channels (int): Number of channels in the image.
-        slices (int): Number of slices in the image.
-        frames (int): Number of frames in the image.
-        dimension (int): The dimension of the image (2D or 3D).
-        img_Title (str): The title for the output image.
-
     Returns:
         ImagePlus: The created ImagePlus object.
     """
     if len(ip_list) == 1:
         # Create a new ImagePlus for a 2D image and display it
-        imp_out = ImagePlus(img_Title, ip_list[0])
+        imp_out = ImagePlus(img.getTitle(), ip_list[0])
         input_max_display_value = img.getDisplayRangeMax()
         input_min_display_value = img.getDisplayRangeMin()
         imp_out.setDisplayRange(input_min_display_value, input_max_display_value)
@@ -535,19 +504,19 @@ def output_image_maker(img, ip_list, channels, slices, frames, dimension, img_Ti
         for ip in ip_list:
             stack_out.addSlice(ip)
         # Create an ImagePlus from the output stack
-        imp_out = ImagePlus(img_Title, stack_out)
-        if channels == 1 and dimension == 3:
+        imp_out = ImagePlus(img.getTitle(), stack_out)
+        if img.getNChannels() == 1 and img.getNDimensions() == 3:
             luts = img.getLuts()
             if len(luts) > 0:
                 imp_out.setLut(luts[0])
             return imp_out
-        if channels > 1:
-            imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames, img.getModeAsString())
-            for channel_index in range(1, channels + 1):
+        if img.getNChannels() > 1:
+            imp_out = HyperStackConverter.toHyperStack(imp_out, img.getNChannels(), img.getNSlices(), img.getNFrames(), img.getModeAsString())
+            for channel_index in range(1, img.getNChannels() + 1):
                 channel_LUT = img.getChannelLut(channel_index)
                 imp_out.setChannelLut(channel_LUT, channel_index)
         else:
-            imp_out = HyperStackConverter.toHyperStack(imp_out, channels, slices, frames)
+            imp_out = HyperStackConverter.toHyperStack(imp_out, img.getNChannels(), img.getNSlices(), img.getNFrames())
             luts = img.getLuts()
             if len(luts) > 0:
                 imp_out.setLut(luts[0])
@@ -559,9 +528,8 @@ if __name__ in ['__main__', '__builtin__']:
     img = IJ.openImage(str(input_File))
     mask = IJ.openImage(str(Mask_File))
     img.show()
-    img_Title, img_Bit_Depth,height,width,dimension,channels,slices,frames = input_image_metadata_extractor(img)
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
-    imp_out = output_image_maker(img, ip_list, channels, slices, frames,dimension, img_Title)
+    imp_out = output_image_maker(img, ip_list)
     imp_out.show()
     
     
