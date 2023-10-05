@@ -326,55 +326,11 @@ def compute_transformation(maskProc, enlarge, orientation):
     # Return the center coordinates, angle, and the transformed image
     return Com_x, Com_y, angle
 
-
-def transform_image_plane(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle):
+def transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle):
     """
-    Apply a transformation to the input image based on the specified task.
-
-    Args:
-        imgProc (ImageProcessor): Input image as an ImageProcessor.
-        task (str): The transformation task to perform. Options: "Centering", "Rotation", "Rotation+Centering".
-        center_of_rotation (str): The center of rotation. Options: "Image_center", "Object_center".
-        Com_x (float): X-coordinate of the center of mass.
-        Com_y (float): Y-coordinate of the center of mass.
-        angle (float): The rotation angle (in degrees).
-
-    Returns:
-        img_out (ImageProcessor): Transformed image as an ImageProcessor.
-    """
-    # Convert the ImageProcessor to a Mat
-    imgMat = imp2mat.toMat(imgProc)
-    
-    if enlarge == "Yes":
-        # Enlarge the input image
-        imgMat = enlarge_image(imgMat)
-    
-    W, H = imgMat.cols(), imgMat.rows()
-
-    if task == "Centering":
-        # Translate the input image using the calculated translation coordinates
-        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
-    elif task == "Rotation":
-        if center_of_rotation == "Image_center":
-            Com_x = int((W/2))
-            Com_y = int((H/2))
-        # Rotate the input image using the calculated angle and center coordinates
-        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)
-    elif task == "Rotation+Centering":
-        # Translate the input image using the calculated translation coordinates
-        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
-        # Rotate the input image using the calculated angle and center coordinates
-        imgMat_out = rotate_image(imgMat_out, angle, int(W/2), int(H/2), W, H)
-    elif task == "No Rotation":
-        imgMat_out = imgMat
-    # Convert the transformed image back to ImageProcessor
-    img_out = mat2ip.toImageProcessor(imgMat_out)
-
-    return img_out
-
-def transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle):
-    """
-    Transform the input image based on specified parameters.
+    Apply the transformation specified by task to the currently active image-plane of the ImagePlus.
+    The current plane is set via imp.setPosition(c,z,t) or imp.setPositionWithoutUpdate(c,z,t) for better performance.
+    The transformed image plane is returned as a new image processor
 
     Args:
         img: The input image.
@@ -390,19 +346,43 @@ def transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, a
     """
     imgProc = img.getProcessor()
 
-    if angle == 0 and task == "Rotation":
-        task = "No Rotation"
-        # Apply transformation to the image
-        img_out = transform_image_plane(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
-    elif angle == 0 and task == "Rotation+Centering":
+    if task == "Rotation" and angle == 0 :
+        return imgProc.duplicate() # nothing to do, returns a copy of the input image plane then
+    
+    if task == "Rotation+Centering" and angle == 0 :
         task = "Centering"
-        # Apply transformation to the image
-        img_out = transform_image_plane(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
-    else:
-        # Apply transformation to the image
-        img_out = transform_image_plane(imgProc, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+    
+    # Convert the ImageProcessor to a Mat
+    imgMat = imp2mat.toMat(imgProc)
+    
+    if enlarge == "Yes":
+        # Enlarge the input image
+        imgMat = enlarge_image(imgMat)
+    
+    W, H = imgMat.cols(), imgMat.rows()
 
-    return img_out
+    if task == "Centering": # Translate the input image using the calculated translation coordinates
+        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
+    
+    elif task == "Rotation":
+        
+        if center_of_rotation == "Image_center":
+            Com_x = int((W/2))
+            Com_y = int((H/2))
+        
+        # Rotate the input image using the calculated angle and center coordinates
+        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)
+    
+    elif task == "Rotation+Centering":
+        
+        # Translate the input image using the calculated translation coordinates
+        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
+        
+        # Rotate the input image using the calculated angle and center coordinates
+        imgMat_out = rotate_image(imgMat_out, angle, int(W/2), int(H/2), W, H)
+    
+    # Convert the transformed image back to an ImageProcessor
+    return mat2ip.toImageProcessor(imgMat_out)
 
 
 def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge):
@@ -445,7 +425,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
                         IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
                         # Set the position of the input image
                         img.setPositionWithoutUpdate(channel_index, z_slice, stack_Index)
-                        img_out = transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                        img_out = transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                         # Append the transformed image to the list
                         ip_list.append(img_out)
 
@@ -455,7 +435,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
                     current_status = current_status + 1
                     IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
                     img.setPositionWithoutUpdate(channel_index, stack_Index, img.getNFrames())
-                    img_out = transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
 
@@ -471,9 +451,10 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
                     current_status = current_status + 1
                     IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
                     img.setPositionWithoutUpdate(channel_index, z_slice, frame_index)
-                    img_out = transform_image_plus(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
+                    
 
     return ip_list
 
@@ -481,14 +462,10 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
 
 def output_image_maker(img, ip_list):
     """
-    Create and return an ImagePlus object based on the given dimension, image title, and list of image processors.
-
-    Args:
-        img (ImagePlus): The input ImagePlus object.
-        ip_list (list): List of ImageProcessor objects for the output image.
-    Returns:
-        ImagePlus: The created ImagePlus object.
+    Create an ImagePlus from the list of transformed ImageProcessor (ip_list).
+    The ImagePlus has the same dimensions than the input ImagePlus (especially for hyperstacks same number of channels, timepoint... between input and output image)
     """
+    
     if len(ip_list) == 1:
         # Create a new ImagePlus for a 2D image and display it
         imp_out = ImagePlus(img.getTitle(), ip_list[0])
@@ -497,6 +474,7 @@ def output_image_maker(img, ip_list):
         imp_out.setDisplayRange(input_min_display_value, input_max_display_value)
         luts = img.getLuts()
         imp_out.setLut(luts[0])
+        
     else:
         # Create an output image stack
         stack_out = ImageStack()
@@ -529,9 +507,6 @@ if __name__ in ['__main__', '__builtin__']:
     mask = IJ.openImage(str(Mask_File))
     img.show()
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
-    imp_out = output_image_maker(img, ip_list)
-    imp_out.show()
-    
-    
-
- 
+    print ip_list
+    #imp_out = output_image_maker(img, ip_list)
+    #imp_out.show()
