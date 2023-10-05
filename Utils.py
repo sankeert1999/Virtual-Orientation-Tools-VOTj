@@ -398,17 +398,17 @@ def process_input_img(task, orientation, Center_of_rotation, enlarge, channels, 
     
     
     # Main for loop, aligning each timepoint individually if the input mask has 1 slice per timepoint
-    for t in range(img.getNFrames()):
+    for t in range(1, img.getNFrames() + 1):
         
         # if a stack is provided for the mask then compute the transformation for each timepoint, taking the correspondind slice from the mask 
-        if mask.getStackSize() > 2: 
+        if mask.getStackSize() >= 2: 
             maskProc = mask.getStack().getProcessor(t)
             maskMat = ImProcToMat(maskProc, maskProc.getBitDepth())
             Com_x, Com_y, angle = compute_transformation(enlarge, orientation, maskMat)
             
         # Then align all slices the same way, and for each Z-slice also each channel
-        for z in range(img.getNSlices()):
-            for channel in range(image.getNChannels()):
+        for z in range(1, img.getNSlices() + 1):
+            for c in range(1, img.getNChannels() + 1):
                 img.setPosition(c, z, t)
                 imgProc = img.getProcessor()
                 imgMat = ImProcToMat(imgProc, imgProc.getBitDepth())
