@@ -507,6 +507,6 @@ if __name__ in ['__main__', '__builtin__']:
     mask = IJ.openImage(str(Mask_File))
     img.show()
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
-    print ip_list
-    #imp_out = output_image_maker(img, ip_list)
-    #imp_out.show()
+    
+    imp_out = output_image_maker(img, ip_list)
+    imp_out.show()
