@@ -459,7 +459,6 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
     return ip_list
 
 
-
 def output_image_maker(img, ip_list):
     """
     Create an ImagePlus from the list of transformed ImageProcessor (ip_list).
@@ -475,31 +474,30 @@ def output_image_maker(img, ip_list):
         luts = img.getLuts()
         imp_out.setLut(luts[0])
         
+        return imp_out
+    
     else:
         # Create an output image stack
         stack_out = ImageStack()
+        
         # Add transformed slices to the output stack
         for ip in ip_list:
             stack_out.addSlice(ip)
+        
         # Create an ImagePlus from the output stack
         imp_out = ImagePlus(img.getTitle(), stack_out)
-        if img.getNChannels() == 1 and img.getNDimensions() == 3:
-            luts = img.getLuts()
-            if len(luts) > 0:
-                imp_out.setLut(luts[0])
-            return imp_out
-        if img.getNChannels() > 1:
-            imp_out = HyperStackConverter.toHyperStack(imp_out, img.getNChannels(), img.getNSlices(), img.getNFrames(), img.getModeAsString())
-            for channel_index in range(1, img.getNChannels() + 1):
-                channel_LUT = img.getChannelLut(channel_index)
-                imp_out.setChannelLut(channel_LUT, channel_index)
-        else:
-            imp_out = HyperStackConverter.toHyperStack(imp_out, img.getNChannels(), img.getNSlices(), img.getNFrames())
-            luts = img.getLuts()
-            if len(luts) > 0:
-                imp_out.setLut(luts[0])
+        
+        nChannels = img.getNChannels()
+        imp_out = HyperStackConverter.toHyperStack(imp_out, nChannels, img.getNSlices(), img.getNFrames())
+        
+        # Propagate lut and display range from input image to output image
+        imp_out.copyLuts(img)
+        
+        # set display mode (composite, color) only for multi-channel images
+        if nChannels > 1:
+            imp_out.setMode(img.getMode())
 
-    return imp_out
+        return imp_out
 
 
 if __name__ in ['__main__', '__builtin__']:
