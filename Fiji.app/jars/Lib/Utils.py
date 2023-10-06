@@ -299,6 +299,10 @@ def compute_transformation(maskProc, enlarge, orientation):
             Com_y (float): Y-coordinate of the center of mass.
             angle (float): Orientation angle of the largest contour.
     """
+    
+    if maskProc.getBitDepth() != 8:
+        maskProc = maskProc.convertToByteProcessor() # findContours from opencv works with 8-bit only, conversion will scale from min/max to 0-255
+    
     # Convert image and mask processors to matrices
     maskMat = imp2mat.toMat(maskProc)
     
@@ -437,7 +441,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
 
-    # If the mask has 2 dimensions
+    # If the mask is a single image plane
     elif mask.getNDimensions() == 2:
         maskProc = mask.getProcessor()
         Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation)
