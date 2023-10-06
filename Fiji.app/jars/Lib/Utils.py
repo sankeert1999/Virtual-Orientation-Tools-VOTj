@@ -37,11 +37,12 @@ def detectContours(binary_mask):
     Detect contours in the given binary mask and return the largest contour.
 
     Arguments:
-    binary_mask -- Binary mask image containing object regions.
+    binary_mask, Mat -- Binary mask image containing object regions.
 
     Returns:
     largest_contour_out -- The largest contour detected in the binary masks as a Mat.
     """
+    
     # Create a MatVector to store detected contours
     listContour = MatVector()
     findContours(binary_mask, listContour, RETR_LIST, CHAIN_APPROX_NONE)
@@ -291,15 +292,12 @@ def compute_transformation(maskProc, enlarge, orientation):
     Args:
         enlarge (str): Whether to enlarge the image ("Yes" or "No").
         orientation (str): Orientation of the object ("Horizontal" or "Vertical").
-        imgMat (Mat): Input image plane as a Mat.
-        maskMat (Mat): Binary mask image plane as a Mat.
 
     Returns:
         tuple: A tuple containing:
             Com_x (float): X-coordinate of the center of mass.
             Com_y (float): Y-coordinate of the center of mass.
             angle (float): Orientation angle of the largest contour.
-            imgMat (Mat): Transformed image.
     """
     # Convert image and mask processors to matrices
     maskMat = imp2mat.toMat(maskProc)
