@@ -32,19 +32,19 @@ def getMax(myList):
             max_value_index = i
     return max_value, max_value_index
 
-def detectContours(binary_masks):
+def detectContours(binary_mask):
     """
-    Detect contours in the given binary masks and return the largest contour.
+    Detect contours in the given binary mask and return the largest contour.
 
     Arguments:
-    binary_masks -- Binary mask image containing object regions.
+    binary_mask -- Binary mask image containing object regions.
 
     Returns:
     largest_contour_out -- The largest contour detected in the binary masks as a Mat.
     """
     # Create a MatVector to store detected contours
     listContour = MatVector()
-    findContours(binary_masks, listContour, RETR_LIST, CHAIN_APPROX_NONE)
+    findContours(binary_mask, listContour, RETR_LIST, CHAIN_APPROX_NONE)
     
     # Calculate the area of each detected contour and store in the 'area' list
     area = []
