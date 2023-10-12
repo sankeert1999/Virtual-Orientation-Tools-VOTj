@@ -468,11 +468,10 @@ def output_image_maker(img, ip_list):
     """
     
     if len(ip_list) == 1:
+        
         # Create a new ImagePlus for a 2D image and display it
         imp_out = ImagePlus(img.getTitle(), ip_list[0])
-        input_max_display_value = img.getDisplayRangeMax()
-        input_min_display_value = img.getDisplayRangeMin()
-        imp_out.setDisplayRange(input_min_display_value, input_max_display_value)
+        imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax())
         luts = img.getLuts()
         imp_out.setLut(luts[0])
         
@@ -496,8 +495,13 @@ def output_image_maker(img, ip_list):
         # only for multi-channels i.e composite images
         if imp_out.isComposite():
              imp_out.copyLuts(img) 
-             imp_out.setMode(img.getMode()) 
-             
+             imp_out.setMode(img.getMode()) # composite (i.e merging channel colors) or color (i.e separate color channels)
+        
+        else:
+        	# Non-composite, propagate single display range and LUT too
+        	imp_out.setLut(img.getLuts()[0])
+        	imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax())
+        	
         return imp_out
 
 
