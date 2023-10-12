@@ -470,7 +470,7 @@ def output_image_maker(img, ip_list):
     if len(ip_list) == 1:
         
         # Create a new ImagePlus for a 2D image and display it
-        imp_out = ImagePlus(img.getTitle(), ip_list[0])
+        imp_out = ImagePlus(img.getTitle()+"-aligned", ip_list[0])
         
         if imp_out.getBitDepth() == 24 : # RGB, only propagate display range (although not really working)
             imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax())
