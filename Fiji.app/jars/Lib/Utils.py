@@ -492,16 +492,16 @@ def output_image_maker(img, ip_list):
              imp_out = HyperStackConverter.toHyperStack(imp_out, img.getNChannels(), img.getNSlices(), img.getNFrames())
         
         # Propagate lut, display range and display mode from input image to output image
-        # only for multi-channels i.e composite images
-        if imp_out.isComposite():
-             imp_out.copyLuts(img) 
+        if imp_out.isComposite(): # multi-channels i.e composite images
+             imp_out.copyLuts(img)          # this function is only available to CompositeImagePlus not all ImagePlus
              imp_out.setMode(img.getMode()) # composite (i.e merging channel colors) or color (i.e separate color channels)
         
-        else:
-        	# Non-composite, propagate single display range and LUT too
-        	imp_out.setLut(img.getLuts()[0])
-        	imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax())
-        	
+        elif imp_out.getBitDepth() != 24 : # non-composite (i.e single channel) and non-RGB
+             imp_out.setLut(img.getLuts()[0]) # propagate LUT and display range - this throws an error for RGB
+        
+        else : # RGB - only set display range (although not really working)
+            imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax()) # not really working for RGB but does not throw an error
+
         return imp_out
 
 
