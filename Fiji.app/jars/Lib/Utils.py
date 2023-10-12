@@ -1,6 +1,6 @@
 #@ File (label="Select the input file") input_File
 #@ File (label="Select the mask file to the input file") Mask_File
-#@ String (choices={"Centering", "Rotation","Rotation+Centering"}, label = "Tasks", style="listBox") task
+#@ String (choices={"Centering", "Rotation","Centering+Rotation"}, label = "Tasks", style="listBox") task
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
 #@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
@@ -336,7 +336,7 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y
 
     Args:
         img: The input image.
-        task (str): The transformation task ("Rotation", "Rotation+Centering", or "No Rotation").
+        task (str): The transformation task ("Rotation", "Centering+Rotation", or "No Rotation").
         center_of_rotation: The center of rotation coordinates.
         enlarge (str): Whether to enlarge the image ("Yes" or "No").
         Com_x (float): X-coordinate of the center of mass.
@@ -351,7 +351,7 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y
     if task == "Rotation" and angle == 0 :
         return imgProc.duplicate() # nothing to do, returns a copy of the input image plane then
     
-    if task == "Rotation+Centering" and angle == 0 :
+    if task == "Centering+Rotation" and angle == 0 :
         task = "Centering"
     
     # Convert the ImageProcessor to a Mat
@@ -375,7 +375,7 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y
         # Rotate the input image using the calculated angle and center coordinates
         imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)
     
-    elif task == "Rotation+Centering":
+    elif task == "Centering+Rotation":
         
         # Translate the input image using the calculated translation coordinates
         imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
