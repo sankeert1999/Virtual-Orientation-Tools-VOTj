@@ -409,6 +409,10 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
     ip_list = []
     current_status = 0
 
+    if img.getNChannels() > 1 and img.getNFrames()==1 and img.getNSlices()==1 and mask.getNDimensions() == 3:
+        IJ.error("Expected 2D mask but got 3D mask")
+        raise Exception("Expected 2D mask but got 3D mask")
+    
     # Check if the mask has 3 dimensions
     if mask.getNDimensions() == 3:
         stack_Size = mask.getStackSize()
