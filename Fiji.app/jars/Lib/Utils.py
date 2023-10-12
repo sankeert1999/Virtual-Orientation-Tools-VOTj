@@ -489,16 +489,15 @@ def output_image_maker(img, ip_list):
         # Create an ImagePlus from the output stack
         imp_out = ImagePlus(img.getTitle(), stack_out)
         
-        nChannels = img.getNChannels()
-        imp_out = HyperStackConverter.toHyperStack(imp_out, nChannels, img.getNSlices(), img.getNFrames())
+        if imp_out.getBitDepth() != 24 : # conversion to hyperstack raises null pointer exception with RGB images
+             imp_out = HyperStackConverter.toHyperStack(imp_out, img.getNChannels(), img.getNSlices(), img.getNFrames())
         
-        # Propagate lut and display range from input image to output image
-        imp_out.copyLuts(img)
-        
-        # set display mode (composite, color) only for multi-channel images
-        if nChannels > 1:
-            imp_out.setMode(img.getMode())
-
+        # Propagate lut, display range and display mode from input image to output image
+        # only for multi-channels i.e composite images
+        if imp_out.isComposite():
+             imp_out.copyLuts(img) 
+             imp_out.setMode(img.getMode()) 
+             
         return imp_out
 
 
