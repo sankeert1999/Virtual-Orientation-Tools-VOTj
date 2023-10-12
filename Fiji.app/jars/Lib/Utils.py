@@ -471,9 +471,11 @@ def output_image_maker(img, ip_list):
         
         # Create a new ImagePlus for a 2D image and display it
         imp_out = ImagePlus(img.getTitle(), ip_list[0])
-        imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax())
-        luts = img.getLuts()
-        imp_out.setLut(luts[0])
+        
+        if imp_out.getBitDepth() == 24 : # RGB, only propagate display range (although not really working)
+            imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax())
+        else:
+            imp_out.setLut(img.getLuts()[0])
         
         return imp_out
     
