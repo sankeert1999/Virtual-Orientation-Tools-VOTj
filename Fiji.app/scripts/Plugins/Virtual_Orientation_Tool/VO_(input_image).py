@@ -5,7 +5,7 @@
 #@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
 
-from VO_Utils import process_input_img,output_image_maker
+from VOT_Utils import process_input_img,output_image_maker
 
 ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
 imp_out = output_image_maker(img, ip_list)
