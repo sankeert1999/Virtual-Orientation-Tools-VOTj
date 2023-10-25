@@ -474,7 +474,10 @@ def output_image_maker(img, ip_list):
     if len(ip_list) == 1:
         
         # Create a new ImagePlus for a 2D image and display it
-        imp_out = ImagePlus(img.getTitle()+"-aligned", ip_list[0])
+        img_title = img.getTitle()
+        # Find the position of the dot (.) which separates the name from the extension
+        # Extract the name portion of the string        
+        imp_out = ImagePlus(img_title[:img_title.rfind(".")]+"_aligned", ip_list[0])
         
         if imp_out.getBitDepth() == 24 : # RGB, only propagate display range (although not really working)
             imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax())
@@ -492,7 +495,10 @@ def output_image_maker(img, ip_list):
             stack_out.addSlice(ip)
         
         # Create an ImagePlus from the output stack
-        imp_out = ImagePlus(img.getTitle(), stack_out)
+        img_title = img.getTitle()
+        # Find the position of the dot (.) which separates the name from the extension
+        # Extract the name portion of the string        
+        imp_out = ImagePlus(img_title[:img_title.rfind(".")]+"_aligned", stack_out)
         
         if imp_out.getBitDepth() != 24 : # conversion to hyperstack raises null pointer exception with RGB images
              imp_out = HyperStackConverter.toHyperStack(imp_out, img.getNChannels(), img.getNSlices(), img.getNFrames())
@@ -508,6 +514,7 @@ def output_image_maker(img, ip_list):
         else : # RGB - only set display range (although not really working)
             imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax()) # not really working for RGB but does not throw an error
 
+        imp_out.changes = True
         return imp_out
 
 
