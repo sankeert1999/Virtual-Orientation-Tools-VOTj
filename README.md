@@ -1,8 +1,9 @@
-# Virtual Orienation Tool FIJI
+# Virtual Orienation Tool FIJI (VOTj)
 This tool is designed to center and align objects of interest both horizontally and vertically from their base orientation. It requires an input image and a corresponding mask that defines the object of interest within the image.
 This tool is adapted at aligning a single object in each image, and this alignment can seamlessly propagate across multiple channels in the case of multichannel images. 
 It offers compatibility across a wide range of image types, including 2D, 3D, 4D, and 5D data.
 ![Intro Image](https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT.png)
+
 # Virtual Orientation Tool Overview
 The tool starts with a GUI asking for 
 ## Input image 
@@ -19,6 +20,8 @@ Corresponding mask file for the input image representing the object of interest 
 | C = 1, Z = 1, T > 1 |	3D | 2D/3D | Stack (3D) |
 | C = 1, Z > 1, T > 1 |	4D | 2D/3D | HyperStack (4D) |
 | C = 1, Z > 1, T = 1 |	3D | 2D/3D | Stack (3D) |
+
+
 
 ## Tasks
 After selecting the corresponding images the next step is to selecte the task which you want to perform with this tool.
@@ -52,9 +55,16 @@ User have teh option to enalrge the output image, enlarging the image serves the
 <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_3.png" width="40%" height="40%">
   </p>
 
-# User Annotated Virtual Orientation Tool Overview
-A graphical user interface (GUI) will appear, prompting you to select the input image.
-Note: Ensure you have the desired image open in Fiji before using this tool
+# VOTj Modes
+- ## VO (input image)
+  In this specific operational mode of the VOTj tool, the user is prompted [Virtual Orientation Tool Overview](#virtual-orientation-tool-overview) to select an input image (the image to be aligned) and an associated mask (image or 3D stack) that corresponds to the input image. The tool then proceeds to generate the output image after collecting essential alignment information from the user.
+  
+  <a name="Virtual-Orientation-Tool-Overview"></a>
+  <p align="center">
+<img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_input_image.png" width="50%" height="50%">
+  </p>
+
+
 
 
 
