@@ -1,7 +1,8 @@
 #@PrefService prefs 
 
 from ij import IJ
-from ij.plugin import ImageCalculator,Duplicator
+from ij.macro import MacroConstants
+from ij.plugin import ImageCalculator,Duplicator, ImageInfo
 from ij.gui import WaitForUserDialog, GenericDialog
 from fiji.util.gui import GenericDialogPlus
 
@@ -79,10 +80,14 @@ def threshold_single_slice_annotation(img, channel_start, channel_end, slice_sta
     # Apply a Look-Up Table (LUT) to enhance the visualization
     IJ.run(mask, "Apply LUT", "")
 
-    # Create a dialog instructing the user to annotate the image
-    wait_dialog = WaitForUserDialog("Title Message", "Pick the paintbrush tool and mark the object of interest")
-    wait_dialog.show()
+    IJ.setTool("Paintbrush Tool")
+    IJ.setForegroundColor(255,255,255)
 
+        # Create a dialog instructing the user to annotate the image
+    wait_dialog = WaitForUserDialog("Title Message", "Mark the object of interest on the image.(To increase brush width double left click on the paintbrush icon from the Toolbar)")
+    button_info=wait_dialog.getButton()
+    button_info.label="Continue"
+    wait_dialog.show()
     # Calculate and set a raw threshold based on the image histogram
     histogram = mask.getStatistics()
     IJ.setRawThreshold(mask, histogram.histMax - 1, histogram.histMax)
@@ -118,8 +123,13 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
     # Apply a Look-Up Table (LUT) to enhance the visualization for a stack
     IJ.run(mask, "Apply LUT", "stack")
 
-    # Create a dialog instructing the user to annotate the image stack
-    wait_dialog = WaitForUserDialog("Title Message", "Pick the paintbrush tool and mark the object of interest across the stack")
+    IJ.setTool("Paintbrush Tool")
+    IJ.setForegroundColor(255,255,255)
+
+        # Create a dialog instructing the user to annotate the image
+    wait_dialog = WaitForUserDialog("Title Message", "Mark the object of interest across the stack (To increase brush width double left click on the paintbrush icon from the Toolbar)")
+    button_info=wait_dialog.getButton()
+    button_info.label="Continue"
     wait_dialog.show()
 
     # Calculate and set a raw threshold based on the image histogram
@@ -134,10 +144,10 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
 
 
 ## Create a graphical user interface (GUI) for  Virtual Orientation Tool Annotation Toolbar 
-Win = GenericDialogPlus("Virtual Orientation Tool Annotation Toolbar") 
+Win = GenericDialogPlus("User Guided Virtual Orientation Tool Toolbar") 
 
 # Add an option for users to select an image. 
-Win.addImageChoice("Image", prefs.get("Image","Choice")) 
+Win.addImageChoice("Input Image", prefs.get("Image","Choice")) 
 
 # Display a message asking users to cite the paper if they use the plugin.
 Win.addMessage("""If you use this plugin please cite:
@@ -162,6 +172,17 @@ img_Title, img_Bit_Depth, height, width, dimension, channels, slices, frames, im
 if img_type == "2D":
     mask = threshold_single_slice_annotation(img, 1, 1, 1, 1, 1, 1) 
     mask.show()
+
+# If the image has multiple channels, let the user choose the appropriate channel number
+elif img_type == "3D" and channels > 1:                       
+        Win = GenericDialogPlus("Select the appropriate channel for annotation") 
+        Win.addNumericField("Channel_number", prefs.getInt("Channel_number", 1), 1)                                 
+        Win.showDialog()
+        if Win.wasOKed():  
+            Channel_number = int(Win.getNextNumber())
+            prefs.put("Channel_number", Channel_number)
+            mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, 1, 1, 1, 1) 
+            mask.show()
 else:
     # Create a dialog for the user to choose the annotation mode (single or multi-slice).
     Win = GenericDialogPlus("Select annotation mode") 
@@ -176,18 +197,8 @@ else:
     # If the selected annotation mode is "Single-Slice-Annotation", that means the binary mask created would be just a single image iresspective of the image type (3D,4D,5D etc.)
     if Annotation_mode == "Single-Slice-Annotation":
         if img_type == "3D":
-            # If the image has multiple channels, let the user choose the appropriate channel number
-            if channels > 1:                        
-                Win = GenericDialogPlus("Select the appropriate channel for annotation") 
-                Win.addNumericField("Channel_number", prefs.getInt("Channel_number", 1), 1)                                 
-                Win.showDialog()
-                if Win.wasOKed():  
-                    Channel_number = int(Win.getNextNumber())
-                    prefs.put("Channel_number", Channel_number)
-                    mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, 1, 1, 1, 1) 
-                    mask.show()
             # If the image has multiple slices, let the user choose the appropriate slice number
-            elif slices > 1:
+            if slices > 1:
                 Win = GenericDialogPlus("Select the appropriate slice for annotation") 
                 Win.addNumericField("Slice_number", prefs.getInt("Slice_number", 1), 1)                                 
                 Win.showDialog()
@@ -267,15 +278,11 @@ else:
     #If the selected annotation mode is "Multi-Slice-Annotation", that means the binary mask created would be a 3D stack based on theuser annotation           
     elif Annotation_mode == "Multi-Slice-Annotation":        
         if img_type == "3D":
-            if channels > 1:
-                IJ.error("For multichannel 3D stack a 2D binary mask is expected")
-                raise Exception("Expected a single annotation but got multiple annotation")
-            else:
-                if slices > 1:
-                    mask = threshold_multi_slice_annotation(img, 1, 1, 1, slices, 1, 1)
-                elif frames > 1:    
-                    mask = threshold_multi_slice_annotation(img, 1, 1, 1, 1, 1, frames) 
-                mask.show()
+            if slices > 1:
+                mask = threshold_multi_slice_annotation(img, 1, 1, 1, slices, 1, 1)
+            elif frames > 1:    
+                mask = threshold_multi_slice_annotation(img, 1, 1, 1, 1, 1, frames) 
+            mask.show()
         elif img_type == "4D":
             # If the image has multiple slices and frames, let the user choose the appropriate slice number and frame number
             if channels == 1:
@@ -338,9 +345,10 @@ if Win.wasOKed():
     prefs.put("Center_Of_Rotation", center_of_rotation)
     prefs.put("Enlarge", enlarge)
 
+
 ##Calling the utils file 
 from VOT_Utils import process_input_img,output_image_maker
-
 ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
 imp_out = output_image_maker(img, ip_list)
 imp_out.show()
+imp_out.changes = True
