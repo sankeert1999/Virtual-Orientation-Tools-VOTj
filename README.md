@@ -3,7 +3,7 @@ This tool is designed to center and align objects of interest both horizontally 
 This tool is adapted at aligning a single object in each image, and this alignment can seamlessly propagate across multiple channels in the case of multichannel images. 
 It offers compatibility across a wide range of image types, including 2D, 3D, 4D, and 5D data.
 ![Intro Image](https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT.png)
-# Tool Overview
+# Virtual Orientation Tool Overview
 The tool starts with a GUI asking for 
 ## Input image 
 Input image to be aligned (compatibile across a wide range of image types, including 2D, 3D, 4D, and 5D data.)
@@ -51,4 +51,12 @@ User have teh option to enalrge the output image, enlarging the image serves the
 <p align="center">
 <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_3.png" width="40%" height="40%">
   </p>
+
+# User Annotated Virtual Orientation Tool Overview
+A graphical user interface (GUI) will appear, prompting you to select the input image.
+Note: Ensure you have the desired image open in Fiji before using this tool
+
+
+
+
 
