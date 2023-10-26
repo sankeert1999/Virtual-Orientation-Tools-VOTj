@@ -37,12 +37,13 @@ After selecting the corresponding images the next step is to selecte the task wh
     This task involves recognizing the object of interest, calculating its center, aligning the image to the center, determining the base orientation of the object, and calculating the rotation angle required to align it with the horizontal or vertical axis, as specified by the user. Subsequently, the image is rotated to achieve this alignment.
 ## Orientation
  Desired orientation for aligning the object of interest. 
+   - ### Horizontal
+  - ### Vertical
 <p align="center">
 <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_2.png" width="35%" height="35%">
   </p>
   An illustrative image demonstrating the same sample object centered and aligned in two distinct orientations.
-  - ### Horizontal    
-  - ### Vertical
+
     
 ## Center of rotation
  Users have the option to specify the rotation center. This feature proves valuable in scenarios when the **task is  rotation**. However, when the **task is centering** rotation becomes unnecessary, rendering this option redundant. Similarly, in cases of when the **task is centering+rotation**, where the object's center is aligned with the image center as the initial step, this option becomes redundant as well.  
@@ -57,12 +58,14 @@ User have teh option to enalrge the output image, enlarging the image serves the
 
 # VOTj Modes
 - ## VO (input image)
-  In this specific operational mode of the VOTj tool, the user is prompted [Virtual Orientation Tool Overview](#virtual-orientation-tool-overview) to select an input image (the image to be aligned) and an associated mask (image or 3D stack) that corresponds to the input image. The tool then proceeds to generate the output image after collecting essential alignment information from the user.
-  
-  <a name="Virtual-Orientation-Tool-Overview"></a>
-  <p align="center">
+  In this specific operational mode of the VOTj tool, the user is prompted to select an input image (the image to be aligned) and an associated mask (image or 3D stack) that corresponds to the input image. The tool then proceeds to generate the output image after collecting essential alignment information from the user. [Virtual Orientation Tool Overview](#virtual-orientation-tool-overview)
+<p align="center">
 <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_input_image.png" width="50%" height="50%">
   </p>
+  
+- ## VO (user annotation)
+   In this specific operational mode of the VOTj tool, the user is prompted to annoate the object of interest and based on these annotations the input image is alingned.
+  - ### Selecting the input image 
 
 
 
