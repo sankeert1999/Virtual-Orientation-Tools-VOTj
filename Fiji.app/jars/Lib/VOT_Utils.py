@@ -484,6 +484,8 @@ def output_image_maker(img, ip_list):
         else:
             imp_out.setLut(img.getLuts()[0])
         
+        imp_out.copyScale(img)  #copying the scale metadata from the input image and transferring it to th output image.
+        
         return imp_out
     
     else:
@@ -514,7 +516,8 @@ def output_image_maker(img, ip_list):
         else : # RGB - only set display range (although not really working)
             imp_out.setDisplayRange(img.getDisplayRangeMin(), img.getDisplayRangeMax()) # not really working for RGB but does not throw an error
 
-        imp_out.changes = True
+        imp_out.copyScale(img)  #copying the scale metadata from the input image and transferring it to th output image.
+
         return imp_out
 
 
@@ -523,6 +526,6 @@ if __name__ in ['__main__', '__builtin__']:
     mask = IJ.openImage(str(Mask_File))
     img.show()
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
-    
     imp_out = output_image_maker(img, ip_list)
     imp_out.show()
+    
