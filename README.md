@@ -93,10 +93,18 @@ User have teh option to enalrge the output image, enlarging the image serves the
       </p>
       
   - ### Selecting appropriate Slice/Stack for annotation
-    After selecting the appropriate annotation mode, the user will be prompted to choose the image or stack for annotation. Depending on whether you've chosen Single-Slice-Annotation or Multi-Slice-Annotation, the tool will guide you accordingly. For instance, if you have a 3D stack with multiple Z slices and opt for Single-Slice-Annotation mode, you will be prompted to select the specific Z slice you wish to annotate.
+    After selecting the appropriate annotation mode, the user will be prompted to choose the image or stack for annotation. Depending on whether you've chosen **Single-Slice-Annotation** or **Multi-Slice-Annotation**, the tool will guide you accordingly. For instance, if you have a 3D stack with multiple Z slices and opt for **Single-Slice-Annotation** mode, you will be prompted to select the specific Z slice you wish to annotate.
 <p align="center">
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_3.png" width="50%" height="50%">
       </p>
+
+  - ### Annotation 
+
+  <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_4.png" width="60%" height="60%">
+      </p>
+
+
      
 
 
