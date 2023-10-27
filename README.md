@@ -98,11 +98,22 @@ User have teh option to enalrge the output image, enlarging the image serves the
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_3.png" width="50%" height="50%">
       </p>
 
-  - ### Annotation 
-
+  - ### Annotating the object of interest 
+    Once you've selected the image for annotation, the tool will present the image or stack for annotation, and the paintbrush tool will be automatically activated with a white color. To adjust the brush width, simply double-click on the paintbrush tool icon. It's important to note that drawing on the image before confirming the width will make the annotation         permanent and irreversible.
+    Here are some tips for effective annotation:
+    - When marking the object of interest, ensure it covers the orientation you want to align.
+    - Try to position the annotation somewhat centered on the object of interest.
+    - For multi-slice annotation, aim for a consistent drawing that doesn't drastically change across the stack, particularly at the centers."
   <p align="center">
-    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_4.png" width="60%" height="60%">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_4.png" width="80%" height="80%">
       </p>
+
+  - ### Configuring the VOTj panel
+    Now, the user is prompted to select the alignment operation they need for their image..[Virtual Orientation Tool Overview](#virtual-orientation-tool-overview)
+  <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_5.png" width="60%" height="60%">
+      </p>
+
 
 
      
