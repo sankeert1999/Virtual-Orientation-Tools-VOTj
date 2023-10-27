@@ -65,11 +65,32 @@ User have teh option to enalrge the output image, enlarging the image serves the
   
 - ## VO (user annotation)
    In this specific operational mode of the VOTj tool, the user is prompted to annoate the object of interest and based on these annotations the input image is alingned.
-  - ### Selecting the input image 
+  - ### Selecting the input image
+    <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_1.png" width="50%" height="50%">
+      </p>
+  - ### Selecting the annotation mode
+    There are two annoation mode Single-Slice-Annotation and Multi-Slice-Annotation.
+    - #### **Single-Slice-Annotation**
+      **Single-Slice-Annotation** is ideal when you want to align a single slice of your input image. This mode is useful in 
+      various situations. For example, if you have a 3D stack with multiple slices and want to align the entire stack based 
+      on a single annotated slice, this mode 
+      allows you to annotate that specific slice (typically the most focused one).
+    - #### **Multi-Slice Annotation**
+      **Multi-Slice-Annotation**, on the other hand, allows you to annotate multiple slices to achieve image alignment. This 
+      mode is beneficial when your image data is more complex. For instance, if you have a 5D stack containing 3 channels, 10 
+      slices, and 20 timepoints, choosing 
+      **Multi-Slice-Annotation** lets you select both the channel and the slice number to annotate across all timepoints. The 
+      tool then aligns the image based on this comprehensive annotation across the specified slices, ensuring precise 
+      alignment even in complex 5D datasets.
 
-
-
-
+    These two annotation modes provide you with the flexibility to align images efficiently based on your specific image 
+    characteristics and alignment requirements. In essence, through annotation, you create a mask file that guides the 
+    alignment process. To better understand how to design your mask according to your input,[consult the following table](#mask), which outlines the different mask files expected by the tool for various input image scenarios.
+<p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_2.png" width="50%" height="50%">
+      </p>
+     
 
 
 
