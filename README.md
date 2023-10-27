@@ -70,10 +70,11 @@ User have teh option to enalrge the output image, enlarging the image serves the
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_1.png" width="50%" height="50%">
       </p>
   - ### Selecting the annotation mode
+    User would be prompted with a window to select the annotation mode (only for images with dimensionality > 3).
     There are two annoation mode Single-Slice-Annotation and Multi-Slice-Annotation.
     - #### **Single-Slice-Annotation**
       **Single-Slice-Annotation** is ideal when you want to align a single slice of your input image. This mode is useful in 
-      various situations. For example, if you have a 3D stack with multiple slices and want to align the entire stack based 
+      various situations. For example, if you have a 3D stack with multiple Z slices and want to align the entire stack based 
       on a single annotated slice, this mode 
       allows you to annotate that specific slice (typically the most focused one).
     - #### **Multi-Slice Annotation**
@@ -89,6 +90,12 @@ User have teh option to enalrge the output image, enlarging the image serves the
     alignment process. To better understand how to design your mask according to your input,[consult the following table](#mask), which outlines the different mask files expected by the tool for various input image scenarios.
 <p align="center">
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_2.png" width="50%" height="50%">
+      </p>
+      
+  - ### Selecting appropriate Slice/Stack for annotation
+    After selecting the appropriate annotation mode, the user will be prompted to choose the image or stack for annotation. Depending on whether you've chosen Single-Slice-Annotation or Multi-Slice-Annotation, the tool will guide you accordingly. For instance, if you have a 3D stack with multiple Z slices and opt for Single-Slice-Annotation mode, you will be prompted to select the specific Z slice you wish to annotate.
+<p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_3.png" width="50%" height="50%">
       </p>
      
 
