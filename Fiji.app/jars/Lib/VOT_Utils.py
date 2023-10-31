@@ -250,7 +250,7 @@ def translate_image(imMat, Com_x, Com_y, W, H):
     
     return imMat_out
 
-def enlarge_image(imMat):
+def enlarge_image(imMat,task):
     """
     Enlarge the input image to a square shape.
 
@@ -260,32 +260,46 @@ def enlarge_image(imMat):
     Returns:
     imMat_en -- Enlarged square image as a Mat.
     """
-    # Calculate the dimensions for the enlarged square image
-    enlarged_dims = int((imMat.rows() * imMat.rows() + imMat.cols() * imMat.cols()) ** 0.5)
-    
-    # Create a new square Mat for the enlarged image
-    imMat_en = Mat(enlarged_dims, enlarged_dims, imMat.type())
-    
-    # Calculate the border widths for top, bottom, left, and right
-    if (enlarged_dims - imMat.rows()) % 2 == 0:
-        top = bottom = (enlarged_dims - imMat.rows()) // 2
+    # if the task is rotation the image is enalrged such the image height and width is replcaed by the diagonal of the input image
+    if task == "Rotation":
+        # Calculate the dimensions for the enlarged  image
+        enlarged_dims = int((imMat.rows() * imMat.rows() + imMat.cols() * imMat.cols()) ** 0.5)
+        
+        # Create a new square Mat for the enlarged image
+        imMat_en = Mat(enlarged_dims, enlarged_dims, imMat.type())
+        
+        # Calculate the border widths for top, bottom, left, and right
+        if (enlarged_dims - imMat.rows()) % 2 == 0:
+            top = bottom = (enlarged_dims - imMat.rows()) // 2
+        else:
+            top = (enlarged_dims - imMat.rows()) // 2
+            bottom = enlarged_dims - (imMat.rows() + top) 
+        
+        if (enlarged_dims - imMat.cols()) % 2 == 0:
+            left = right = (enlarged_dims - imMat.cols()) // 2
+        else:
+            left = (enlarged_dims - imMat.cols()) // 2
+            right = enlarged_dims - (imMat.cols() + left) 
+    # For other task image is enalrged such that the height and width of the input image is doubled
     else:
-        top = (enlarged_dims - imMat.rows()) // 2
-        bottom = enlarged_dims - (imMat.rows() + top) 
-    
-    if (enlarged_dims - imMat.cols()) % 2 == 0:
-        left = right = (enlarged_dims - imMat.cols()) // 2
-    else:
-        left = (enlarged_dims - imMat.cols()) // 2
-        right = enlarged_dims - (imMat.cols() + left)   
-    
-    
+        if imMat.rows() == imMat.cols():
+            top = bottom = left = right =int(imMat.rows()/2)
+            # Calculate the dimensions for the enlarged  image
+            enlarged_dims = 2*imMat.rows()
+            imMat_en = Mat(enlarged_dims, enlarged_dims, imMat.type())
+        else:
+            top=bottom = int(imMat.rows()/2)
+            left=right = int(imMat.cols()/2)                  
+            # Calculate the dimensions for the enlarged  image
+            enlarged_dims_x = 2*imMat.cols()
+            enlarged_dims_y = 2*imMat.rows()
+            imMat_en = Mat(enlarged_dims_y, enlarged_dims_x, imMat.type())    
     # Copy the input image into the center of the enlarged square image
     copyMakeBorder(imMat, imMat_en, top, bottom, left, right, BORDER_CONSTANT, Scalar(0))
     
     return imMat_en
 
-def compute_transformation(maskProc, enlarge, orientation):
+def compute_transformation(maskProc, enlarge, orientation,task):
     """
     Compute image transformation parameters.
 
@@ -303,12 +317,12 @@ def compute_transformation(maskProc, enlarge, orientation):
     if maskProc.getBitDepth() != 8:
         maskProc = maskProc.convertToByteProcessor() # findContours from opencv works with 8-bit only, conversion will scale from min/max to 0-255
     
-    # Convert image and mask processors to matrices
+    # Convert mask processor to matrices
     maskMat = imp2mat.toMat(maskProc)
     
     # Check if image enlargement is requested
     if enlarge == "Yes":
-        maskMat = enlarge_image(maskMat)
+        maskMat = enlarge_image(maskMat,task)
     
     # Detect the largest contour in the binary mask
     largest_contour = detectContours(maskMat)
@@ -359,7 +373,7 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y
     
     if enlarge == "Yes":
         # Enlarge the input image
-        imgMat = enlarge_image(imgMat)
+        imgMat = enlarge_image(imgMat,task)
     
     W, H = imgMat.cols(), imgMat.rows()
 
@@ -409,6 +423,11 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
     ip_list = []
     current_status = 0
 
+    if (img.getHeight() != mask.getHeight()) or (img.getWidth() != mask.getWidth()):
+        IJ.error("Mask dimension and Image dimension doesn't match")
+        raise Exception("Mask dimension and Image dimension doesn't match")
+
+
     if img.getNChannels() > 1 and img.getNFrames()==1 and img.getNSlices()==1 and mask.getNDimensions() == 3:
         IJ.error("Expected 2D mask but got 3D mask")
         raise Exception("Expected 2D mask but got 3D mask")
@@ -421,7 +440,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
         for stack_Index in range(1, (stack_Size + 1)):
             mask.setPosition(stack_Index)
             maskProc = mask.getProcessor()
-            Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation)
+            Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation,task)
 
             # Check if the input image has multiple frames
             if img.getNFrames() > 1:
@@ -448,7 +467,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
     # If the mask is a single image plane
     elif mask.getNDimensions() == 2:
         maskProc = mask.getProcessor()
-        Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation)
+        Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation,task)
 
         # Loop through the input image frames, slices, and channels
         for frame_index in range(1, (img.getNFrames() + 1)):
