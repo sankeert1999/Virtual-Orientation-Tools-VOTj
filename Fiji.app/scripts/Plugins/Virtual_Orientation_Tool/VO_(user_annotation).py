@@ -144,7 +144,7 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
 
 
 ## Create a graphical user interface (GUI) for  Virtual Orientation Tool Annotation Toolbar 
-Win = GenericDialogPlus("User Guided Virtual Orientation Tool Toolbar") 
+Win = GenericDialogPlus("User Guided Virtual Orientation Toolbar") 
 
 # Add an option for users to select an image. 
 Win.addImageChoice("Input Image", prefs.get("Image","Choice")) 
