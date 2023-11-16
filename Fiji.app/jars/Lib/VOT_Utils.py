@@ -4,14 +4,22 @@
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
 #@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
-from opcode import hasjabs
-from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT
-from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
-from ijopencv.ij      import ImagePlusMatConverter as imp2mat
-from ijopencv.opencv  import MatImagePlusConverter as mat2ip
+
 from ij import ImagePlus,IJ,ImageStack,CompositeImage
 from ij.plugin import HyperStackConverter
 import math
+
+try:
+    from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT
+    from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
+    from ijopencv.ij      import ImagePlusMatConverter as imp2mat
+    from ijopencv.opencv  import MatImagePlusConverter as mat2ip
+    
+except: 
+    error = "Missing IJ-OpenCV update site.\nPlease activate it under Help > Update... > Manage Update sites"
+    IJ.error("Missing IJ-OpenCV update site", error)
+    raise Exception(error) # needed to stop further execution
+
 
 def getMax(myList):
     """
