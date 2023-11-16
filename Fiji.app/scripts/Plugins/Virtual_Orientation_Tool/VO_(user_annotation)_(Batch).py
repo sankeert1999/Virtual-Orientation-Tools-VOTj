@@ -6,7 +6,6 @@ from ij.plugin import ImageCalculator,Duplicator, ImageInfo,Commands
 from ij.gui import WaitForUserDialog, GenericDialog
 from fiji.util.gui import GenericDialogPlus
 import os 
-# Open your image (replace 'your_image_path' with the actual image path)
 
 def input_image_metadata_extractor(img):
     """
@@ -146,7 +145,7 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
     return mask
 
 
-Win = GenericDialogPlus("User Guided Virtual Orientation Tool Toolbar (Batch)")
+Win = GenericDialogPlus("User Guided Virtual Orientation Toolbar (Batch)")
 Win.addDirectoryOrFileField("Image directory selector", prefs.get("InputDirPath", ""))
 Win.addDirectoryOrFileField("Output directory", prefs.get("OutputDirPath", ""))
 Win.addChoice("Save_Format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format", "tiff"))
