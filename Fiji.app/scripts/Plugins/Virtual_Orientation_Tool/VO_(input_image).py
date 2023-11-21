@@ -1,3 +1,5 @@
+#@PrefService prefs 
+from fiji.util.gui import GenericDialogPlus
 Win = GenericDialogPlus("Virtual Orientation Toolbar")
 Win.addImageChoice("Select the image file", prefs.get("Image","Choice")) 
 Win.addImageChoice("Select the mask file", prefs.get("Mask", "Choice")) 
