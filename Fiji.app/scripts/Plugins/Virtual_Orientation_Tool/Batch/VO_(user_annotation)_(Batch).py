@@ -360,7 +360,7 @@ if Win.wasOKed():
 
             ##Calling the utils file 
             from VOT_Utils import process_input_img,output_image_maker
-            ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
+            process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity)
             imp_out = output_image_maker(img, ip_list)
             imp_out.show()
             out_filename = imp_out.getTitle()
