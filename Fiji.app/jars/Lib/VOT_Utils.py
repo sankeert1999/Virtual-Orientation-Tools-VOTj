@@ -4,7 +4,7 @@
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
 #@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
-#@ String (choices={"None","Left-Right/Top-Bottom", "Right-Left/Bottom-Top"}, label = "Object_Polarity",style="listBox") object_polarity
+#@ String (choices={"None","Left-Right/Top-Bottom", "Right-Left/Bottom-Top"}, label = "Object Polarity",style="listBox") object_polarity
 
 
 from ij import ImagePlus,IJ,ImageStack,CompositeImage
