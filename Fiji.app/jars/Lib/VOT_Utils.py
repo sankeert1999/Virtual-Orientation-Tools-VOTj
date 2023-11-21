@@ -1,16 +1,20 @@
-#@ File (label="Select the input file") input_File
-#@ File (label="Select the mask file to the input file") Mask_File
+#@ ImagePlus (label="Select the image file") img 
+#@ ImagePlus (label="Select the mask file") mask 
 #@ String (choices={"Centering", "Rotation","Centering+Rotation"}, label = "Tasks", style="listBox") task
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
 #@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
+#@ String (choices={"None","Left-Right/Top-Bottom", "Right-Left/Bottom-Top"}, label = "Object_Polarity",style="listBox") object_polarity
+
 
 from ij import ImagePlus,IJ,ImageStack,CompositeImage
 from ij.plugin import HyperStackConverter
+from ij.process import FloatProcessor
+from ij.gui import ProfilePlot, Plot
 import math
 
 try:
-    from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT
+    from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT,flip
     from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
     from ijopencv.ij      import ImagePlusMatConverter as imp2mat
     from ijopencv.opencv  import MatImagePlusConverter as mat2ip
@@ -181,6 +185,86 @@ def getOrientation(largest_contour):
     angle_orientation = int(math.degrees(angle_orientation))    #converting to degrees from radians
     return angle_orientation
 
+
+def get_object_polarity(mask_proc_out, orientation, task, center_of_rotation, Com_x):
+    """
+    Calculate the polarity of an object in a binary mask post orientation.
+
+    Arguments:
+    maskProc -- Binary mask imageprocessor(oriented).
+    orientation -- Orientation of the object ("Vertical" or "Horizontal").
+
+    Returns:
+    left_top_mean -- Sum of mean intensity of the left/top part of the object.
+    right_bottom_mean -- Sum of mean intensity of the right/bottom part of the object.
+    flip_value -- Flag indicating the axis of flipping  (0 for vertical, 1 for horizontal).
+    """
+    # Create a temporary ImagePlus from the binary mask
+    temp_mask_ip = ImagePlus("temp_mask_ip", mask_proc_out)
+
+    # Set default values
+    flip_value = 1
+    profile_plot_orientation = 0
+
+    # Select the entire image
+    IJ.run(temp_mask_ip, "Select All", "")
+
+    # Adjust parameters based on orientation
+    if orientation == "Vertical":
+        profile_plot_orientation = 1
+        flip_value = 0
+
+    # Create a ProfilePlot for the specified orientation
+    temp_profile_plot = ProfilePlot(temp_mask_ip, profile_plot_orientation)
+    
+    # Get the intensity profile data
+    temp_profile_plot_data = temp_profile_plot.getProfile()
+
+    if (task == "Centering") or (task == "Centering+Rotation"):
+        # Split the data into left/top and right/bottom halves
+        left_top_ls, right_bottom_ls = temp_profile_plot_data[:len(temp_profile_plot_data)//2], temp_profile_plot_data[len(temp_profile_plot_data)//2:]                
+    elif task == "Rotation":
+        left_top_ls, right_bottom_ls = temp_profile_plot_data[:Com_x], temp_profile_plot_data[Com_x:]  
+        if center_of_rotation == "Image_center": 
+            # Split the data into left/top and right/bottom halves
+            left_top_ls, right_bottom_ls = temp_profile_plot_data[:len(temp_profile_plot_data)//2], temp_profile_plot_data[len(temp_profile_plot_data)//2:]       
+        
+
+
+    # Calculate the sum of mean intensity for left/top and right/bottom halves
+    left_top_mean_sum = sum(left_top_ls)
+    right_bottom_mean_sum = sum(right_bottom_ls)
+
+    return left_top_mean_sum, right_bottom_mean_sum, flip_value
+
+
+def set_object_polarity(imgMat_out, object_polarity, left_top_mean_sum, right_bottom_mean_sum, flip_value):
+    """
+    Set the polarity of an object in the output image based on intensity means.
+
+    Arguments:
+    imgMat_out -- Output image as a Mat.
+    object_polarity -- Desired object polarity ("Left-Right/Top-Bottom" or "Right-Left/Bottom-Top").
+    left_top_mean -- Mean intensity of the left/top part of the object.
+    right_bottom_mean -- Mean intensity of the right/bottom part of the object.
+    flip_value -- Flag indicating the axis of flipping  (0 for vertical, 1 for horizontal).
+
+    Returns:
+    imgMat_out -- Updated output image Mat with applied polarity.
+    """
+    # Check and apply polarity based on object_polarity
+    if object_polarity == "Left-Right/Top-Bottom":
+        if right_bottom_mean_sum > left_top_mean_sum:
+            # Flip the image if the condition is met
+            flip(imgMat_out, imgMat_out, flip_value)
+    elif object_polarity == "Right-Left/Bottom-Top":
+        if left_top_mean_sum > right_bottom_mean_sum:
+            # Flip the image if the condition is met
+            flip(imgMat_out, imgMat_out, flip_value)
+
+    return imgMat_out
+
+
 def rotate_image(imMat, angle, Com_x, Com_y, W, H):
     """
     Rotate an input image by a specified angle around a given center.
@@ -350,11 +434,11 @@ def compute_transformation(maskProc, enlarge, orientation,task):
     # Return the center coordinates, angle, and the transformed image
     return Com_x, Com_y, angle
 
-def transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle):
+def transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value):
     """
     Apply the transformation specified by task to the currently active image-plane of the ImagePlus.
-    The current plane is set via imp.setPosition(c,z,t) or imp.setPositionWithoutUpdate(c,z,t) for better performance.
-    The transformed image plane is returned as a new image processor
+    The current plane is set via imp.setPosition(c, z, t) or imp.setPositionWithoutUpdate(c, z, t) for better performance.
+    The transformed image plane is returned as a new image processor.
 
     Args:
         img: The input image.
@@ -364,52 +448,62 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y
         Com_x (float): X-coordinate of the center of mass.
         Com_y (float): Y-coordinate of the center of mass.
         angle (float): The rotation angle.
+        left_top_mean (float): Sum of mean intensity of the left/top part of the object.
+        right_bottom_mean (float): Sum of mean intensity of the right/bottom part of the object.
+        flip_value -- Flag indicating the axis of flipping  (0 for vertical, 1 for horizontal).
 
     Returns:
         img_out: The transformed image.
     """
     imgProc = img.getProcessor()
 
-    if task == "Rotation" and angle == 0 :
-        return imgProc.duplicate() # nothing to do, returns a copy of the input image plane then
-    
-    if task == "Centering+Rotation" and angle == 0 :
+    # If there is no rotation angle, return a duplicate of the input image
+    if task == "Rotation" and angle == 0:
+        return imgProc.duplicate()
+
+    # If the task is Centering+Rotation and there is no rotation angle, switch to Centering task
+    if task == "Centering+Rotation" and angle == 0:
         task = "Centering"
-    
+
     # Convert the ImageProcessor to a Mat
     imgMat = imp2mat.toMat(imgProc)
-    
+
+    # Enlarge the input image if specified
     if enlarge == "Yes":
-        # Enlarge the input image
-        imgMat = enlarge_image(imgMat,task)
-    
+        imgMat = enlarge_image(imgMat, task)
+
     W, H = imgMat.cols(), imgMat.rows()
 
-    if task == "Centering": # Translate the input image using the calculated translation coordinates
-        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
-    
-    elif task == "Rotation":
-        
-        if center_of_rotation == "Image_center":
-            Com_x = int((W/2))
-            Com_y = int((H/2))
-        
-        # Rotate the input image using the calculated angle and center coordinates
-        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)
-    
-    elif task == "Centering+Rotation":
-        
+    if task == "Centering":
         # Translate the input image using the calculated translation coordinates
         imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
-        
+
+    elif task == "Rotation":
+        # Set center of rotation coordinates to image center if specified
+        if center_of_rotation == "Image_center":
+            Com_x = int((W / 2))
+            Com_y = int((H / 2))
+
         # Rotate the input image using the calculated angle and center coordinates
-        imgMat_out = rotate_image(imgMat_out, angle, int(W/2), int(H/2), W, H)
-    
+        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)
+
+    elif task == "Centering+Rotation":
+        # Translate the input image using the calculated translation coordinates
+        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
+
+        # Rotate the input image using the calculated angle and center coordinates
+        imgMat_out = rotate_image(imgMat_out, angle, int(W / 2), int(H / 2), W, H)
+
+    # Set object polarity if specified
+    if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
+        imgMat_out = set_object_polarity(imgMat_out, object_polarity, left_top_mean_sum, right_bottom_mean_sum, flip_value)
+
     # Convert the transformed image back to an ImageProcessor
     return mat2ip.toImageProcessor(imgMat_out)
 
 
-def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge):
+
+def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge, object_polarity):
     """
     Process input images based on specified transformations.
 
@@ -423,6 +517,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
         orientation (str): Orientation of transformation.
         center_of_rotation (float): Center of rotation angle.
         enlarge (str): Whether to enlarge the images.
+        object_polarity (str): Object polarity ("Left-Right/Top-Bottom" or "Right-Left/Bottom-Top").
 
     Returns:
         list: List of processed ImageProcessors.
@@ -431,15 +526,11 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
     ip_list = []
     current_status = 0
 
+    # Check if dimensions of the input image and mask match
     if (img.getHeight() != mask.getHeight()) or (img.getWidth() != mask.getWidth()):
-        IJ.error("Mask dimension and Image dimension doesn't match")
-        raise Exception("Mask dimension and Image dimension doesn't match")
+        IJ.error("Mask dimension and Image dimension don't match")
+        raise Exception("Mask dimension and Image dimension don't match")
 
-
-    if img.getNChannels() > 1 and img.getNFrames()==1 and img.getNSlices()==1 and mask.getNDimensions() == 3:
-        IJ.error("Expected 2D mask but got 3D mask")
-        raise Exception("Expected 2D mask but got 3D mask")
-    
     # Check if the mask has 3 dimensions
     if mask.getNDimensions() == 3:
         stack_Size = mask.getStackSize()
@@ -448,17 +539,25 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
         for stack_Index in range(1, (stack_Size + 1)):
             mask.setPosition(stack_Index)
             maskProc = mask.getProcessor()
-            Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation,task)
+            Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation, task)
+            
+            # Calculate object polarity if required
+            if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
+                left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
+                mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
+                left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation, task, center_of_rotation, Com_x)
+            else:
+                left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
 
             # Check if the input image has multiple frames
             if img.getNFrames() > 1:
                 for z_slice in range(1, (img.getNSlices() + 1)):
                     for channel_index in range(1, (img.getNChannels() + 1)):
                         current_status = current_status + 1
-                        IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
+                        IJ.showProgress(current_status, (img.getNFrames() * img.getNChannels() * img.getNSlices()))
                         # Set the position of the input image
                         img.setPositionWithoutUpdate(channel_index, z_slice, stack_Index)
-                        img_out = transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                        img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                         # Append the transformed image to the list
                         ip_list.append(img_out)
 
@@ -466,30 +565,39 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
             elif img.getNFrames() == 1 and img.getNSlices() > 1:
                 for channel_index in range(1, (img.getNChannels() + 1)):
                     current_status = current_status + 1
-                    IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
+                    IJ.showProgress(current_status, (img.getNFrames() * img.getNChannels() * img.getNSlices()))
                     img.setPositionWithoutUpdate(channel_index, stack_Index, img.getNFrames())
-                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
 
     # If the mask is a single image plane
     elif mask.getNDimensions() == 2:
         maskProc = mask.getProcessor()
-        Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation,task)
+        Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation, task)
+
+        # Calculate object polarity if required
+        if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
+            left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
+            mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
+            left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation, task, center_of_rotation, Com_x)
+        else:
+            left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
 
         # Loop through the input image frames, slices, and channels
         for frame_index in range(1, (img.getNFrames() + 1)):
             for z_slice in range(1, (img.getNSlices() + 1)):
                 for channel_index in range(1, (img.getNChannels() + 1)):
                     current_status = current_status + 1
-                    IJ.showProgress(current_status,(img.getNFrames()*img.getNChannels()*img.getNSlices()))
+                    IJ.showProgress(current_status, (img.getNFrames() * img.getNChannels() * img.getNSlices()))
                     img.setPositionWithoutUpdate(channel_index, z_slice, frame_index)
-                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, Com_x, Com_y, angle)
+                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
-                    
 
     return ip_list
+
+
 
 
 def output_image_maker(img, ip_list):
@@ -546,13 +654,14 @@ def output_image_maker(img, ip_list):
         imp_out.copyScale(img)  #copying the scale metadata from the input image and transferring it to th output image.
 
         return imp_out
+    
 
+    
 
 if __name__ in ['__main__', '__builtin__']:
-    img = IJ.openImage(str(input_File))
-    mask = IJ.openImage(str(Mask_File))
-    img.show()
-    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
+    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity)
     imp_out = output_image_maker(img, ip_list)
     imp_out.show()
+
+    
     
