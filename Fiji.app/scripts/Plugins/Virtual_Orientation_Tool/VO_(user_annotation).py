@@ -334,21 +334,24 @@ Win.addChoice("Tasks", ["Centering", "Rotation","Centering+Rotation"], prefs.get
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
 Win.addChoice("Center_Of_Rotation", ["Object_center", "Image_center"], prefs.get("Center_Of_Rotation","Image_center"))
 Win.addChoice("Enlarge", ["Yes", "No"], prefs.get("Enlarge","No")) 
+Win.addChoice("Object_Polarity", ["None", "Left-Right/Top-Bottom", "Right-Left/Bottom-Top"], prefs.get("Object_Polarity","None"))
 Win.showDialog()
 if Win.wasOKed():  
     task = Win.getNextChoice()
     orientation = Win.getNextChoice()
     center_of_rotation = Win.getNextChoice()
-    enlarge = Win.getNextChoice()     
+    enlarge = Win.getNextChoice()
+    object_polarity = Win.getNextChoice()
     prefs.put("Tasks", task)
     prefs.put("Orientation", orientation)
     prefs.put("Center_Of_Rotation", center_of_rotation)
     prefs.put("Enlarge", enlarge)
+    prefs.put("Object_Polarity", object_polarity)
 
 
-##Calling the utils file 
-from VOT_Utils import process_input_img,output_image_maker
-ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
-imp_out = output_image_maker(img, ip_list)
-imp_out.show()
-imp_out.changes = True
+	##Calling the utils file 
+	from VOT_Utils import process_input_img,output_image_maker
+	ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge)
+	imp_out = output_image_maker(img, ip_list)
+	imp_out.show()
+	imp_out.changes = True
