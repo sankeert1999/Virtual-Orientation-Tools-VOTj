@@ -58,6 +58,9 @@ def detectContours(binary_mask):
     # Create a MatVector to store detected contours
     listContour = MatVector()
     findContours(binary_mask, listContour, RETR_LIST, CHAIN_APPROX_NONE)
+    if listContour.size() == 0:
+        largest_contour_out = 0
+        return largest_contour_out
     
     # Calculate the area of each detected contour and store in the 'area' list
     area = []
@@ -418,6 +421,10 @@ def compute_transformation(maskProc, enlarge, orientation,task):
     
     # Detect the largest contour in the binary mask
     largest_contour = detectContours(maskMat)
+    if largest_contour == 0:
+        Com_x, Com_y, angle = "No_Object_Detected","No_Object_Detected","No_Object_Detected"
+        return Com_x, Com_y, angle
+
     
     # Extract the center coordinates of the largest contour
     Com_x, Com_y = contourCenterExtractor(largest_contour)
@@ -540,6 +547,8 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
             mask.setPosition(stack_Index)
             maskProc = mask.getProcessor()
             Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation, task)
+            if (Com_x == "No_Object_Detected") and (Com_y == "No_Object_Detected") and (angle == "No_Object_Detected"):
+                return ip_list
             
             # Calculate object polarity if required
             if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
@@ -575,6 +584,8 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
     elif mask.getNDimensions() == 2:
         maskProc = mask.getProcessor()
         Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation, task)
+        if (Com_x == "No_Object_Detected") and (Com_y == "No_Object_Detected") and (angle == "No_Object_Detected"):
+            return ip_list
 
         # Calculate object polarity if required
         if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
@@ -606,7 +617,10 @@ def output_image_maker(img, ip_list):
     The ImagePlus has the same dimensions than the input ImagePlus (especially for hyperstacks same number of channels, timepoint... between input and output image)
     """
     
-    if len(ip_list) == 1:
+    if len(ip_list) == 0:
+        return img
+    
+    elif len(ip_list) == 1:
         
         # Create a new ImagePlus for a 2D image and display it
         img_title = img.getTitle()
