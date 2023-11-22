@@ -11,6 +11,8 @@ from ij import ImagePlus,IJ,ImageStack,CompositeImage
 from ij.plugin import HyperStackConverter
 from ij.process import FloatProcessor
 from ij.gui import ProfilePlot, Plot
+WaitForUserDialog
+from java.awt.event import KeyAdapter
 import math
 
 try:
@@ -24,6 +26,23 @@ except:
     IJ.error("Missing IJ-OpenCV update site", error)
     raise Exception(error) # needed to stop further execution
 
+
+class CustomWaitDialog(WaitForUserDialog):
+	"""
+	Extends the WaitForUserDialog, b giving the possiblity to respond to keyboard input
+	The ok label is also replaced with "Continue"
+	"""
+	
+	def __init__(self, title, message=""):
+		super(CustomWaitDialog, self).__init__(title, message)
+		okButton = self.getButton()
+		okButton.label = "Continue"
+	
+	def keyPressed(self, e):
+		super(CustomWaitDialog, self).keyPressed(e) # call the mother class event handling, usually good practice
+		#print("Pressed")
+		# Use e to know what key was pressed
+		self.close() # in your case you want to close the dialog I think, that's what you currently do with the classic WaitForUserDialog
 
 def getMax(myList):
     """
