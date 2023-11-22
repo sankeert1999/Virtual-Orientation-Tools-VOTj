@@ -10,8 +10,7 @@
 from ij import ImagePlus,IJ,ImageStack,CompositeImage
 from ij.plugin import HyperStackConverter
 from ij.process import FloatProcessor
-from ij.gui import ProfilePlot, Plot
-WaitForUserDialog
+from ij.gui import ProfilePlot, Plot, WaitForUserDialog
 from java.awt.event import KeyAdapter
 import math
 
