@@ -6,6 +6,30 @@ from ij.plugin import ImageCalculator,Duplicator, ImageInfo,Commands
 from ij.gui import WaitForUserDialog, GenericDialog
 from fiji.util.gui import GenericDialogPlus
 import os 
+##Calling the utils file 
+from VOT_Utils import process_input_img,output_image_maker,CustomWaitDialog
+import textwrap
+
+
+def wait_dialog_box(mask):
+    long_string = textwrap.dedent(""" Mark the object of interest on the image.
+    - To increase brush width double left click on the paintbrush icon from the Toolbar.
+    - Press any key, like the spacebar, to swiftly continue instead of clicking the 'Continue' button.""")
+
+    # Split the long string into sentences
+    sentences = long_string.split('\n')
+
+    # Set the desired width for each line
+    line_width = 50
+
+    # Center-align each sentence individually
+    centered_sentences = [sentence.center(line_width) for sentence in sentences]
+    centered_text='\n'.join(centered_sentences)
+    wait_dialog = CustomWaitDialog("User Annotation",centered_text)
+    mask.getCanvas().addKeyListener(wait_dialog) # add the dialog as a listener to key events on the image, this way any key event will call keyPressed(self, e) of the dialog 
+    wait_dialog.show()
+
+
 
 def input_image_metadata_extractor(img):
     """
@@ -82,11 +106,8 @@ def threshold_single_slice_annotation(img, channel_start, channel_end, slice_sta
     IJ.setTool("Paintbrush Tool")
     IJ.setForegroundColor(255,255,255)
 
-        # Create a dialog instructing the user to annotate the image
-    wait_dialog = WaitForUserDialog("Title Message", "Mark the object of interest on the image.(To increase brush width double left click on the paintbrush icon from the Toolbar)")
-    button_info=wait_dialog.getButton()
-    button_info.label="Continue"
-    wait_dialog.show()
+    # Create a dialog instructing the user to annotate the image
+    wait_dialog_box(mask)
     # Calculate and set a raw threshold based on the image histogram
     histogram = mask.getStatistics()
     IJ.setRawThreshold(mask, histogram.histMax - 1, histogram.histMax)
@@ -127,11 +148,8 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
     IJ.setTool("Paintbrush Tool")
     IJ.setForegroundColor(255,255,255)
 
-        # Create a dialog instructing the user to annotate the image
-    wait_dialog = WaitForUserDialog("Title Message", "Mark the object of interest across the stack (To increase brush width double left click on the paintbrush icon from the Toolbar)")
-    button_info=wait_dialog.getButton()
-    button_info.label="Continue"
-    wait_dialog.show()
+    # Create a dialog instructing the user to annotate the image
+    wait_dialog_box(mask)
 
     # Calculate and set a raw threshold based on the image histogram
     histogram = mask.getStatistics()
@@ -154,6 +172,9 @@ Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation"
 Win.addChoice("Center_Of_Rotation", ["Object_center", "Image_center"], prefs.get("Center_Of_Rotation","Image_center"))
 Win.addChoice("Enlarge", ["Yes", "No"], prefs.get("Enlarge","No")) 
 Win.addChoice("Object_Polarity", ["None", "Left-Right/Top-Bottom", "Right-Left/Bottom-Top"], prefs.get("Object_Polarity","None"))
+Win.addCheckbox("Save_Mask_File", prefs.getInt("SaveMask", False)) 
+Win.addChoice("Mask_Save_Format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format", "tiff"))
+
 # Display a message asking users to cite the paper if they use the plugin.
 Win.addMessage("""If you use this plugin please cite:
 Cite paper""") 
@@ -173,6 +194,8 @@ if Win.wasOKed():
     center_of_rotation = Win.getNextChoice()
     enlarge = Win.getNextChoice()
     object_polarity = Win.getNextChoice()
+    save_mask  = Win.getNextBoolean() 
+    Mask_Save_Format = Win.getNextChoice()
     prefs.put("InputDirPath", InputDirPath)
     prefs.put("OutputDirPath", OutputDirPath)
     prefs.put("Save_Format", Save_Format)
@@ -181,10 +204,20 @@ if Win.wasOKed():
     prefs.put("Center_Of_Rotation", center_of_rotation)
     prefs.put("Enlarge", enlarge)
     prefs.put("Object_Polarity", object_polarity)
+    prefs.put("Save_Mask", save_mask)
+    prefs.put("Mask_Save_Format", Mask_Save_Format)
+
+    if save_mask == True:
+        # Specify the path for the new directory
+        Mask_Directory_Path = os.path.join(OutputDirPath, "Mask_VOTj")
+        # Create the directory
+        os.makedirs(Mask_Directory_Path)
+
     # Get a list of files in the folder
     files = os.listdir(InputDirPath)
     # Supported image file extensions
     image_extensions = ['.tif', '.tiff', '.jpg', '.jpeg', '.png','.bmp']
+
 
     for file_name in files:
         # Create the full path to the file
@@ -358,14 +391,17 @@ if Win.wasOKed():
                             mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, 1, frames)
                             mask.show()
 
-            ##Calling the utils file 
-            from VOT_Utils import process_input_img,output_image_maker
             ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity)
             imp_out = output_image_maker(img, ip_list)
             imp_out.show()
             out_filename = imp_out.getTitle()
             out_file_path = os.path.join(OutputDirPath, out_filename)
             IJ.saveAs(imp_out, Save_Format,out_file_path)
+            
+            if save_mask == True:
+                mask_file_path = os.path.join(Mask_Directory_Path, out_filename)
+                IJ.saveAs(mask, Mask_Save_Format,mask_file_path)
+
             Commands.closeAll()
 
 
