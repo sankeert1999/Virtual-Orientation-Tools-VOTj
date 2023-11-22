@@ -5,6 +5,29 @@ from ij.macro import MacroConstants
 from ij.plugin import ImageCalculator,Duplicator, ImageInfo
 from ij.gui import WaitForUserDialog, GenericDialog
 from fiji.util.gui import GenericDialogPlus
+##Calling the utils file 
+from VOT_Utils import process_input_img,output_image_maker,CustomWaitDialog
+import textwrap
+
+
+def wait_dialog_box(mask):
+    long_string = textwrap.dedent(""" Mark the object of interest on the image.
+    - To increase brush width double left click on the paintbrush icon from the Toolbar.
+    - Press any key, like the spacebar, to swiftly continue instead of clicking the 'Continue' button.""")
+
+    # Split the long string into sentences
+    sentences = long_string.split('\n')
+
+    # Set the desired width for each line
+    line_width = 50
+
+    # Center-align each sentence individually
+    centered_sentences = [sentence.center(line_width) for sentence in sentences]
+    centered_text='\n'.join(centered_sentences)
+    wait_dialog = CustomWaitDialog("User Annotation",centered_text)
+    mask.getCanvas().addKeyListener(wait_dialog) # add the dialog as a listener to key events on the image, this way any key event will call keyPressed(self, e) of the dialog 
+    wait_dialog.show()
+
 
 # Open your image (replace 'your_image_path' with the actual image path)
 
@@ -83,11 +106,8 @@ def threshold_single_slice_annotation(img, channel_start, channel_end, slice_sta
     IJ.setTool("Paintbrush Tool")
     IJ.setForegroundColor(255,255,255)
 
-        # Create a dialog instructing the user to annotate the image
-    wait_dialog = WaitForUserDialog("Title Message", "Mark the object of interest on the image.(To increase brush width double left click on the paintbrush icon from the Toolbar)")
-    button_info=wait_dialog.getButton()
-    button_info.label="Continue"
-    wait_dialog.show()
+    # Create a dialog instructing the user to annotate the image
+    wait_dialog_box(mask)
     # Calculate and set a raw threshold based on the image histogram
     histogram = mask.getStatistics()
     IJ.setRawThreshold(mask, histogram.histMax - 1, histogram.histMax)
@@ -126,11 +146,8 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
     IJ.setTool("Paintbrush Tool")
     IJ.setForegroundColor(255,255,255)
 
-        # Create a dialog instructing the user to annotate the image
-    wait_dialog = WaitForUserDialog("Title Message", "Mark the object of interest across the stack (To increase brush width double left click on the paintbrush icon from the Toolbar)")
-    button_info=wait_dialog.getButton()
-    button_info.label="Continue"
-    wait_dialog.show()
+    # Create a dialog instructing the user to annotate the image
+    wait_dialog_box(mask)
 
     # Calculate and set a raw threshold based on the image histogram
     histogram = mask.getStatistics()
@@ -349,8 +366,6 @@ if Win.wasOKed():
     prefs.put("Object_Polarity", object_polarity)
 
 
-	##Calling the utils file 
-    from VOT_Utils import process_input_img,output_image_maker
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity)
     imp_out = output_image_maker(img, ip_list)
     imp_out.show()
