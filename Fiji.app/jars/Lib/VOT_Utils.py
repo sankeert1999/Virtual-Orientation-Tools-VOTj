@@ -2,9 +2,10 @@
 #@ ImagePlus (label="Select the mask file") mask 
 #@ String (choices={"Centering", "Rotation","Centering+Rotation"}, label = "Tasks", style="listBox") task
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
+#@ String (choices={"None","Left-Right/Top-Bottom", "Right-Left/Bottom-Top"}, label = "Object Polarity",style="listBox") object_polarity
 #@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
-#@ String (choices={"None","Left-Right/Top-Bottom", "Right-Left/Bottom-Top"}, label = "Object Polarity",style="listBox") object_polarity
+#@ Boolean (label="Log File Output") log_window
 
 
 from ij import ImagePlus,IJ,ImageStack,CompositeImage
@@ -15,8 +16,8 @@ from java.awt.event import KeyAdapter
 import math
 
 try:
-    from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT,flip
-    from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine
+    from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT,flip,Rect
+    from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine,boundingRect
     from ijopencv.ij      import ImagePlusMatConverter as imp2mat
     from ijopencv.opencv  import MatImagePlusConverter as mat2ip
     
@@ -38,10 +39,11 @@ class CustomWaitDialog(WaitForUserDialog):
 		okButton.label = "Continue"
 	
 	def keyPressed(self, e):
-		super(CustomWaitDialog, self).keyPressed(e) # call the mother class event handling, usually good practice
-		#print("Pressed")
-		# Use e to know what key was pressed
-		self.close() # in your case you want to close the dialog I think, that's what you currently do with the classic WaitForUserDialog
+		if e.getKeyChar() == ' ' or e.getKeyChar() == '\n':
+			super(CustomWaitDialog, self).keyPressed(e) # call the mother class event handling, usually good practice
+			#print("Pressed")
+			# Use e to know what key was pressed
+			self.close() # in your case you want to close the dialog I think, that's what you currently do with the classic WaitForUserDialog
 
 def getMax(myList):
     """
@@ -207,7 +209,7 @@ def getOrientation(largest_contour):
     return angle_orientation
 
 
-def get_object_polarity(mask_proc_out, orientation, task, center_of_rotation, Com_x):
+def get_object_polarity(mask_proc_out, orientation):
     """
     Calculate the polarity of an object in a binary mask post orientation.
 
@@ -222,6 +224,11 @@ def get_object_polarity(mask_proc_out, orientation, task, center_of_rotation, Co
     """
     # Create a temporary ImagePlus from the binary mask
     temp_mask_ip = ImagePlus("temp_mask_ip", mask_proc_out)
+    temp_maskMat = imp2mat.toMat(mask_proc_out)
+    temp_contour = detectContours(temp_maskMat)
+    contour_bounding_rectangle = boundingRect(temp_contour)
+    contour_rectangle = Rect(contour_bounding_rectangle)
+	
 
     # Set default values
     flip_value = 1
@@ -236,20 +243,13 @@ def get_object_polarity(mask_proc_out, orientation, task, center_of_rotation, Co
         flip_value = 0
 
     # Create a ProfilePlot for the specified orientation
+    temp_mask_ip.setRoi(contour_rectangle.x(),contour_rectangle.y(),contour_rectangle.width(),contour_rectangle.height())
     temp_profile_plot = ProfilePlot(temp_mask_ip, profile_plot_orientation)
     
     # Get the intensity profile data
     temp_profile_plot_data = temp_profile_plot.getProfile()
 
-    if (task == "Centering") or (task == "Centering+Rotation"):
-        # Split the data into left/top and right/bottom halves
-        left_top_ls, right_bottom_ls = temp_profile_plot_data[:len(temp_profile_plot_data)//2], temp_profile_plot_data[len(temp_profile_plot_data)//2:]                
-    elif task == "Rotation":
-        left_top_ls, right_bottom_ls = temp_profile_plot_data[:Com_x], temp_profile_plot_data[Com_x:]  
-        if center_of_rotation == "Image_center": 
-            # Split the data into left/top and right/bottom halves
-            left_top_ls, right_bottom_ls = temp_profile_plot_data[:len(temp_profile_plot_data)//2], temp_profile_plot_data[len(temp_profile_plot_data)//2:]       
-        
+    left_top_ls, right_bottom_ls = temp_profile_plot_data[:len(temp_profile_plot_data)//2], temp_profile_plot_data[len(temp_profile_plot_data)//2:]
 
 
     # Calculate the sum of mean intensity for left/top and right/bottom halves
@@ -528,7 +528,7 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, object_polar
 
 
 
-def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge, object_polarity):
+def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge, object_polarity,log_window):
     """
     Process input images based on specified transformations.
 
@@ -566,13 +566,19 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
             maskProc = mask.getProcessor()
             Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation, task)
             if (Com_x == "No_Object_Detected") and (Com_y == "No_Object_Detected") and (angle == "No_Object_Detected"):
+                if log_window == True:
+                    IJ.log("Image stack framenumber : " + str(stack_Index))
+                    IJ.log("Detected object center (X coordinate) : " + str(Com_x))
+                    IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
+                    IJ.log("Detected object orientation angle : " + str(angle))
                 return ip_list
+                
             
             # Calculate object polarity if required
             if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
                 left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
                 mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
-                left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation, task, center_of_rotation, Com_x)
+                left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation)
             else:
                 left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
 
@@ -587,6 +593,11 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                         img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                         # Append the transformed image to the list
                         ip_list.append(img_out)
+                if log_window == True:
+                    IJ.log("Image stack framenumber : " + str(stack_Index))
+                    IJ.log("Detected object center (X coordinate) : " + str(Com_x))
+                    IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
+                    IJ.log("Detected object orientation angle : " + str(angle))
 
             # If the input image has only one frame and multiple slices
             elif img.getNFrames() == 1 and img.getNSlices() > 1:
@@ -597,19 +608,29 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                     img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
-
+                if log_window == True:
+                    IJ.log("Image stack slicenumber(Z) : " + str(stack_Index))
+                    IJ.log("Detected object center (X coordinate) : " + str(Com_x))
+                    IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
+                    IJ.log("Detected object orientation angle : " + str(angle))
     # If the mask is a single image plane
     elif mask.getNDimensions() == 2:
         maskProc = mask.getProcessor()
         Com_x, Com_y, angle = compute_transformation(maskProc, enlarge, orientation, task)
+        
+
         if (Com_x == "No_Object_Detected") and (Com_y == "No_Object_Detected") and (angle == "No_Object_Detected"):
+            if log_window == True:
+                IJ.log("Detected object center (X coordinate) : " + str(Com_x))
+                IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
+                IJ.log("Detected object orientation angle : " + str(angle))
             return ip_list
 
         # Calculate object polarity if required
         if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
             left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
             mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
-            left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation, task, center_of_rotation, Com_x)
+            left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation)
         else:
             left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
 
@@ -623,6 +644,11 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                     img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
+
+        if log_window == True:
+            IJ.log("Detected object center (X coordinate) : " + str(Com_x))
+            IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
+            IJ.log("Detected object orientation angle : " + str(angle))
 
     return ip_list
 
@@ -691,7 +717,9 @@ def output_image_maker(img, ip_list):
     
 
 if __name__ in ['__main__', '__builtin__']:
-    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity)
+    if log_window == True:
+        IJ.log(" Filename : " + str(img.getTitle()))
+    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,log_window)
     imp_out = output_image_maker(img, ip_list)
     imp_out.show()
 
