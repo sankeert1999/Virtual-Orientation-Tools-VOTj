@@ -1,10 +1,10 @@
 #@ ImagePlus (label="Select the image file") img 
 #@ ImagePlus (label="Select the mask file") mask 
-#@ String (choices={"Centering", "Rotation","Centering+Rotation"}, label = "Tasks", style="listBox") task
+#@ String (choices={"Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"}, label = "Tasks", style="listBox") task
 #@ String (choices={"Horizontal", "Vertical"}, label = "Orientation",style="listBox") orientation
-#@ String (choices={"None","Left-Right/Top-Bottom", "Right-Left/Bottom-Top"}, label = "Object Polarity",style="listBox") object_polarity
-#@ String (choices={"Object_center", "Image_center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
-#@ String (choices={"Yes", "No"}, label = "Enlarge Image",style="radioButtonHorizontal") enlarge
+#@ String (choices={"Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"}, label = "Object Polarity",style="listBox") object_polarity
+#@ String (choices={"Object center", "Image center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
+#@ Boolean (label="Enlarge Image") enlarge
 #@ Boolean (label="Log File Output") log_window
 
 
@@ -25,6 +25,20 @@ except:
     error = "Missing IJ-OpenCV update site.\nPlease activate it under Help > Update... > Manage Update sites"
     IJ.error("Missing IJ-OpenCV update site", error)
     raise Exception(error) # needed to stop further execution
+
+
+CENTERING = "Move object to image-center"
+ROTATION = "Align object to desired orientation" 
+CENTERING_ROTATION = "Center object and then align to orientation"
+HORIZONTAL = "Horizontal"
+VERTICAL = "Vertical"
+OBJECT_CENTER = "Object center"
+IMAGE_CENTER = "Image center"
+ANY = "Any"
+LEFT_TOP = "Left (for horizontal) / Top (for vertical)"
+RIGHT_BOTTOM = "Right (for horizontal) / Bottom (for vertical)"
+ 
+
 
 
 class CustomWaitDialog(WaitForUserDialog):
@@ -133,7 +147,7 @@ def getCorrectingAngle(angle,orientation):
     Returns:
         float: The equivalent small angle within the range (-90, 90).
     """
-    if orientation == "Vertical":
+    if orientation == VERTICAL:
         if 90 > abs(angle) >= 0:
             angle_final = 90 - abs(angle)
             if angle > 0:
@@ -238,7 +252,7 @@ def get_object_polarity(mask_proc_out, orientation):
     IJ.run(temp_mask_ip, "Select All", "")
 
     # Adjust parameters based on orientation
-    if orientation == "Vertical":
+    if orientation == VERTICAL:
         profile_plot_orientation = 1
         flip_value = 0
 
@@ -274,11 +288,11 @@ def set_object_polarity(imgMat_out, object_polarity, left_top_mean_sum, right_bo
     imgMat_out -- Updated output image Mat with applied polarity.
     """
     # Check and apply polarity based on object_polarity
-    if object_polarity == "Left-Right/Top-Bottom":
+    if object_polarity == LEFT_TOP:
         if right_bottom_mean_sum > left_top_mean_sum:
             # Flip the image if the condition is met
             flip(imgMat_out, imgMat_out, flip_value)
-    elif object_polarity == "Right-Left/Bottom-Top":
+    elif object_polarity == RIGHT_BOTTOM:
         if left_top_mean_sum > right_bottom_mean_sum:
             # Flip the image if the condition is met
             flip(imgMat_out, imgMat_out, flip_value)
@@ -365,7 +379,7 @@ def translate_image(imMat, Com_x, Com_y, W, H):
 
 def enlarge_image(imMat,task):
     """
-    Enlarge the input image to a square shape.
+    Enlarge the input image.
 
     Arguments:
     imMat -- Input image as a Mat.
@@ -374,7 +388,7 @@ def enlarge_image(imMat,task):
     imMat_en -- Enlarged square image as a Mat.
     """
     # if the task is rotation the image is enalrged such the image height and width is replcaed by the diagonal of the input image
-    if task == "Rotation":
+    if task == ROTATION:
         # Calculate the dimensions for the enlarged  image
         enlarged_dims = int((imMat.rows() * imMat.rows() + imMat.cols() * imMat.cols()) ** 0.5)
         
@@ -417,7 +431,7 @@ def compute_transformation(maskProc, enlarge, orientation,task):
     Compute image transformation parameters.
 
     Args:
-        enlarge (str): Whether to enlarge the image ("Yes" or "No").
+        enlarge (boolean): Whether to enlarge the image (Boolean).
         orientation (str): Orientation of the object ("Horizontal" or "Vertical").
 
     Returns:
@@ -434,7 +448,7 @@ def compute_transformation(maskProc, enlarge, orientation,task):
     maskMat = imp2mat.toMat(maskProc)
     
     # Check if image enlargement is requested
-    if enlarge == "Yes":
+    if enlarge == True:
         maskMat = enlarge_image(maskMat,task)
     
     # Detect the largest contour in the binary mask
@@ -468,8 +482,8 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, object_polar
     Args:
         img: The input image.
         task (str): The transformation task ("Rotation", "Centering+Rotation", or "No Rotation").
-        center_of_rotation: The center of rotation coordinates.
-        enlarge (str): Whether to enlarge the image ("Yes" or "No").
+        center_of_rotation: The center of rotation.
+        enlarge (boolean): Whether to enlarge the image (Boolean).
         Com_x (float): X-coordinate of the center of mass.
         Com_y (float): Y-coordinate of the center of mass.
         angle (float): The rotation angle.
@@ -483,36 +497,36 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, object_polar
     imgProc = img.getProcessor()
 
     # If there is no rotation angle, return a duplicate of the input image
-    if task == "Rotation" and angle == 0:
+    if task == ROTATION and angle == 0:
         return imgProc.duplicate()
 
     # If the task is Centering+Rotation and there is no rotation angle, switch to Centering task
-    if task == "Centering+Rotation" and angle == 0:
-        task = "Centering"
+    if task == CENTERING_ROTATION and angle == 0:
+        task = CENTERING
 
     # Convert the ImageProcessor to a Mat
     imgMat = imp2mat.toMat(imgProc)
 
     # Enlarge the input image if specified
-    if enlarge == "Yes":
+    if enlarge == True:
         imgMat = enlarge_image(imgMat, task)
 
     W, H = imgMat.cols(), imgMat.rows()
 
-    if task == "Centering":
+    if task == CENTERING:
         # Translate the input image using the calculated translation coordinates
         imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
 
-    elif task == "Rotation":
+    elif task == ROTATION:
         # Set center of rotation coordinates to image center if specified
-        if center_of_rotation == "Image_center":
+        if center_of_rotation == IMAGE_CENTER:
             Com_x = int((W / 2))
             Com_y = int((H / 2))
 
         # Rotate the input image using the calculated angle and center coordinates
         imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)
 
-    elif task == "Centering+Rotation":
+    elif task == CENTERING_ROTATION:
         # Translate the input image using the calculated translation coordinates
         imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
 
@@ -520,7 +534,7 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, object_polar
         imgMat_out = rotate_image(imgMat_out, angle, int(W / 2), int(H / 2), W, H)
 
     # Set object polarity if specified
-    if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
+    if (object_polarity == LEFT_TOP) or (object_polarity == RIGHT_BOTTOM):
         imgMat_out = set_object_polarity(imgMat_out, object_polarity, left_top_mean_sum, right_bottom_mean_sum, flip_value)
 
     # Convert the transformed image back to an ImageProcessor
@@ -540,8 +554,8 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
         mask (ImageStack): Binary mask stack.
         task (str): Task identifier.
         orientation (str): Orientation of transformation.
-        center_of_rotation (float): Center of rotation angle.
-        enlarge (str): Whether to enlarge the images.
+        center_of_rotation (str): Center of rotation angle.
+        enlarge (boolean): Whether to enlarge the images.
         object_polarity (str): Object polarity ("Left-Right/Top-Bottom" or "Right-Left/Bottom-Top").
 
     Returns:
@@ -575,7 +589,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                 
             
             # Calculate object polarity if required
-            if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
+            if (object_polarity == LEFT_TOP) or (object_polarity == RIGHT_BOTTOM):
                 left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
                 mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                 left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation)
@@ -627,7 +641,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
             return ip_list
 
         # Calculate object polarity if required
-        if (object_polarity == "Left-Right/Top-Bottom") or (object_polarity == "Right-Left/Bottom-Top"):
+        if (object_polarity == LEFT_TOP) or (object_polarity == RIGHT_BOTTOM):
             left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
             mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
             left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation)
