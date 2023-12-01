@@ -10,11 +10,12 @@ Win.addMessage("Input Configuration",custom_font_h1)
 
 Win.addImageChoice("Select the image", prefs.get("Image","Choice")) 
 Win.addImageChoice("Select the mask", prefs.get("Mask", "Choice")) 
-Win.addChoice("Tasks", ["Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"], prefs.get("Tasks","Center object and then align to orientation"))
-# Create a Font instance
+
 
 # Add a message with the specified font
 Win.addMessage("Object alignment settings",custom_font_h1) 
+Win.addChoice("Tasks", ["Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"], prefs.get("Tasks","Center object and then align to orientation"))
+# Create a Font instance
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
 Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
 Win.addChoice("Alignement with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignement with object pointing to","Any"))
@@ -48,7 +49,7 @@ if Win.wasOKed():
     prefs.put("Center_Of_Rotation", center_of_rotation)
     prefs.put("Object_Polarity", object_polarity)
     prefs.put("Enlarge", enlarge)
-    prefs.put("Enlarge", log_window)
+    prefs.put("log_window", log_window)
 
 
     from VOT_Utils import process_input_img,output_image_maker
@@ -57,6 +58,7 @@ if Win.wasOKed():
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,log_window)
     imp_out = output_image_maker(img, ip_list)
     imp_out.show()
+    imp_out.changes = True
 
 
 

@@ -5,6 +5,7 @@ from ij.macro import MacroConstants
 from ij.plugin import ImageCalculator,Duplicator, ImageInfo
 from ij.gui import WaitForUserDialog, GenericDialog
 from fiji.util.gui import GenericDialogPlus
+from java.awt import Font
 ##Calling the utils file 
 from VOT_Utils import process_input_img,output_image_maker,CustomWaitDialog
 import textwrap
@@ -13,7 +14,7 @@ import textwrap
 def wait_dialog_box(mask):
     long_string = textwrap.dedent(""" Mark the object of interest on the image.
     - To increase brush width double left click on the paintbrush icon from the Toolbar.
-    - Press any key, like the spacebar, to swiftly continue instead of clicking the 'Continue' button.""")
+    - Press  the spacebar/enter, to swiftly continue instead of clicking the 'Continue' button.""")
 
     # Split the long string into sentences
     sentences = long_string.split('\n')
@@ -161,7 +162,7 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
 
 
 ## Create a graphical user interface (GUI) for  Virtual Orientation Tool Annotation Toolbar 
-Win = GenericDialogPlus("User Guided Virtual Orientation Toolbar") 
+Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj) - Annotation Assisted Alignment") 
 
 # Add an option for users to select an image. 
 Win.addImageChoice("Input Image", prefs.get("Image","Choice")) 
@@ -180,193 +181,206 @@ Win.showDialog()
 if Win.wasOKed():  
     img = Win.getNextImage() 
 
-# Extract metadata from the selected image.
-img_Title, img_Bit_Depth, height, width, dimension, channels, slices, frames, img_type = input_image_metadata_extractor(img)
+    # Extract metadata from the selected image.
+    img_Title, img_Bit_Depth, height, width, dimension, channels, slices, frames, img_type = input_image_metadata_extractor(img)
 
-## Determine the type of the selected image.
+    ## Determine the type of the selected image.
 
-# If the image type is 2D, duplicate the image and use it for annotation.
-if img_type == "2D":
-    mask = threshold_single_slice_annotation(img, 1, 1, 1, 1, 1, 1) 
-    mask.show()
+    # If the image type is 2D, duplicate the image and use it for annotation.
+    if img_type == "2D":
+        mask = threshold_single_slice_annotation(img, 1, 1, 1, 1, 1, 1) 
+        mask.show()
 
-# If the image has multiple channels, let the user choose the appropriate channel number
-elif img_type == "3D" and channels > 1:                       
-        Win = GenericDialogPlus("Select the appropriate channel for annotation") 
-        Win.addNumericField("Channel_number", prefs.getInt("Channel_number", 1), 1)                                 
+    # If the image has multiple channels, let the user choose the appropriate channel number
+    elif img_type == "3D" and channels > 1:                       
+            Win = GenericDialogPlus("Select the appropriate channel for annotation") 
+            Win.addNumericField("Channel_number", prefs.getInt("Channel_number", 1), 1)                                 
+            Win.showDialog()
+            if Win.wasOKed():  
+                Channel_number = int(Win.getNextNumber())
+                prefs.put("Channel_number", Channel_number)
+                mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, 1, 1, 1, 1) 
+                mask.show()
+    else:
+        # Create a dialog for the user to choose the annotation mode (single or multi-slice).
+        Win = GenericDialogPlus("Select annotation mode") 
+        Win.addChoice("Annotation_mode", ["Single-Slice-Annotation", "Multi-Slice-Annotation"], prefs.get("Annotation_Mode", "Multi-Slice-Annotation")) 
         Win.showDialog()
+        
+        # Check if the user clicked "OK" in the annotation mode dialog.
         if Win.wasOKed():  
-            Channel_number = int(Win.getNextNumber())
-            prefs.put("Channel_number", Channel_number)
-            mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, 1, 1, 1, 1) 
-            mask.show()
-else:
-    # Create a dialog for the user to choose the annotation mode (single or multi-slice).
-    Win = GenericDialogPlus("Select annotation mode") 
-    Win.addChoice("Annotation_mode", ["Single-Slice-Annotation", "Multi-Slice-Annotation"], prefs.get("Annotation_Mode", "Multi-Slice-Annotation")) 
-    Win.showDialog()
-    
-    # Check if the user clicked "OK" in the annotation mode dialog.
-    if Win.wasOKed():  
-        Annotation_mode = Win.getNextChoice() 
-        prefs.put("Annotation_Mode", Annotation_mode)
-    
-    # If the selected annotation mode is "Single-Slice-Annotation", that means the binary mask created would be just a single image iresspective of the image type (3D,4D,5D etc.)
-    if Annotation_mode == "Single-Slice-Annotation":
-        if img_type == "3D":
-            # If the image has multiple slices, let the user choose the appropriate slice number
-            if slices > 1:
-                Win = GenericDialogPlus("Select the appropriate slice for annotation") 
-                Win.addNumericField("Slice_number", prefs.getInt("Slice_number", 1), 1)                                 
-                Win.showDialog()
-                if Win.wasOKed():  
-                    Slice_number = int(Win.getNextNumber())
-                    prefs.put("Slice_number", Slice_number)
-                    mask = threshold_single_slice_annotation(img, 1, 1, Slice_number, Slice_number, 1, 1) 
-                    mask.show()
-            # If the image has multiple frames, let the user choose the appropriate frame number
-            elif frames > 1:
-                Win = GenericDialogPlus("Select the appropriate frame for annotation") 
-                Win.addNumericField("Frame_number", prefs.getInt("Frame_number", 1), 1)                                 
-                Win.showDialog()
-                if Win.wasOKed():  
-                    Frame_number = int(Win.getNextNumber())
-                    prefs.put("Frame_number", Frame_number)
-                    # Duplicate the image for the selected frame and apply single-slice annotation.
-                    mask = Duplicator().run(img, 1, 1, 1, 1, Frame_number, Frame_number)
-                    mask = threshold_single_slice_annotation(img, 1, 1, 1, 1, Frame_number, Frame_number) 
-                    mask.show()
-        elif img_type == "4D":
-            # If the image has multiple slices and frames, let the user choose the appropriate slice number and frame number
-            if channels == 1:
+            Annotation_mode = Win.getNextChoice() 
+            prefs.put("Annotation_Mode", Annotation_mode)
+        
+        # If the selected annotation mode is "Single-Slice-Annotation", that means the binary mask created would be just a single image iresspective of the image type (3D,4D,5D etc.)
+        if Annotation_mode == "Single-Slice-Annotation":
+            if img_type == "3D":
+                # If the image has multiple slices, let the user choose the appropriate slice number
+                if slices > 1:
+                    Win = GenericDialogPlus("Select the appropriate slice for annotation") 
+                    Win.addNumericField("Slice_number", prefs.getInt("Slice_number", 1), 1)                                 
+                    Win.showDialog()
+                    if Win.wasOKed():  
+                        Slice_number = int(Win.getNextNumber())
+                        prefs.put("Slice_number", Slice_number)
+                        mask = threshold_single_slice_annotation(img, 1, 1, Slice_number, Slice_number, 1, 1) 
+                        mask.show()
+                # If the image has multiple frames, let the user choose the appropriate frame number
+                elif frames > 1:
+                    Win = GenericDialogPlus("Select the appropriate frame for annotation") 
+                    Win.addNumericField("Frame_number", prefs.getInt("Frame_number", 1), 1)                                 
+                    Win.showDialog()
+                    if Win.wasOKed():  
+                        Frame_number = int(Win.getNextNumber())
+                        prefs.put("Frame_number", Frame_number)
+                        # Duplicate the image for the selected frame and apply single-slice annotation.
+                        mask = Duplicator().run(img, 1, 1, 1, 1, Frame_number, Frame_number)
+                        mask = threshold_single_slice_annotation(img, 1, 1, 1, 1, Frame_number, Frame_number) 
+                        mask.show()
+            elif img_type == "4D":
+                # If the image has multiple slices and frames, let the user choose the appropriate slice number and frame number
+                if channels == 1:
+                    Win = GenericDialogPlus("Select the appropriate image for annotation") 
+                    Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)
+                    Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1)                                   
+                    Win.showDialog()
+                    if Win.wasOKed():
+                        Slice_number = int(Win.getNextNumber())  
+                        Frame_number = int(Win.getNextNumber())
+                        prefs.put("Slice_number", Slice_number)
+                        prefs.put("Frame_number", Frame_number)
+                        mask = threshold_single_slice_annotation(img, 1, 1, Slice_number, Slice_number, Frame_number, Frame_number) 
+                        mask.show()
+                # If the image has multiple channels and frames, let the user choose the appropriate channel number and frame number        
+                elif slices == 1:
+                    Win = GenericDialogPlus("Select the appropriate image for annotation") 
+                    Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
+                    Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1)                                   
+                    Win.showDialog()
+                    if Win.wasOKed():
+                        Channel_number = int(Win.getNextNumber())  
+                        Frame_number = int(Win.getNextNumber())
+                        prefs.put("Channel_number", Channel_number)
+                        prefs.put("Frame_number", Frame_number)
+                        mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, 1, 1, Frame_number, Frame_number) 
+                        mask.show()
+                # If the image has multiple slices and channels, let the user choose the appropriate slice number and channel number        
+                elif frames == 1:
+                    Win = GenericDialogPlus("Select the appropriate image for annotation") 
+                    Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
+                    Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)                                   
+                    Win.showDialog()
+                    if Win.wasOKed():
+                        Channel_number = int(Win.getNextNumber())  
+                        Slice_number = int(Win.getNextNumber())
+                        prefs.put("Channel_number", Channel_number)
+                        prefs.put("Slice_number", Slice_number)
+                        mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, 1, 1) 
+                        mask.show()
+            elif img_type == "5D":
+                # Let the user choose the appropriate slice number, channel number and frame number
                 Win = GenericDialogPlus("Select the appropriate image for annotation") 
+                Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
                 Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)
-                Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1)                                   
+                Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1) 
                 Win.showDialog()
                 if Win.wasOKed():
+                    Channel_number = int(Win.getNextNumber())
                     Slice_number = int(Win.getNextNumber())  
-                    Frame_number = int(Win.getNextNumber())
+                    Frame_number = int(Win.getNextNumber()) 
+                    prefs.put("Channel_number", Channel_number)
                     prefs.put("Slice_number", Slice_number)
                     prefs.put("Frame_number", Frame_number)
-                    mask = threshold_single_slice_annotation(img, 1, 1, Slice_number, Slice_number, Frame_number, Frame_number) 
+                    mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, Frame_number, Frame_number) 
                     mask.show()
-            # If the image has multiple channels and frames, let the user choose the appropriate channel number and frame number        
-            elif slices == 1:
-                Win = GenericDialogPlus("Select the appropriate image for annotation") 
-                Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
-                Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1)                                   
-                Win.showDialog()
-                if Win.wasOKed():
-                    Channel_number = int(Win.getNextNumber())  
-                    Frame_number = int(Win.getNextNumber())
-                    prefs.put("Channel_number", Channel_number)
-                    prefs.put("Frame_number", Frame_number)
-                    mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, 1, 1, Frame_number, Frame_number) 
-                    mask.show()
-            # If the image has multiple slices and channels, let the user choose the appropriate slice number and channel number        
-            elif frames == 1:
-                Win = GenericDialogPlus("Select the appropriate image for annotation") 
-                Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
-                Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)                                   
-                Win.showDialog()
-                if Win.wasOKed():
-                    Channel_number = int(Win.getNextNumber())  
-                    Slice_number = int(Win.getNextNumber())
-                    prefs.put("Channel_number", Channel_number)
-                    prefs.put("Slice_number", Slice_number)
-                    mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, 1, 1) 
-                    mask.show()
-        elif img_type == "5D":
-            # Let the user choose the appropriate slice number, channel number and frame number
-            Win = GenericDialogPlus("Select the appropriate image for annotation") 
-            Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
-            Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)
-            Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1) 
-            Win.showDialog()
-            if Win.wasOKed():
-                Channel_number = int(Win.getNextNumber())
-                Slice_number = int(Win.getNextNumber())  
-                Frame_number = int(Win.getNextNumber()) 
-                prefs.put("Channel_number", Channel_number)
-                prefs.put("Slice_number", Slice_number)
-                prefs.put("Frame_number", Frame_number)
-                mask = threshold_single_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, Frame_number, Frame_number) 
+        #If the selected annotation mode is "Multi-Slice-Annotation", that means the binary mask created would be a 3D stack based on theuser annotation           
+        elif Annotation_mode == "Multi-Slice-Annotation":        
+            if img_type == "3D":
+                if slices > 1:
+                    mask = threshold_multi_slice_annotation(img, 1, 1, 1, slices, 1, 1)
+                elif frames > 1:    
+                    mask = threshold_multi_slice_annotation(img, 1, 1, 1, 1, 1, frames) 
                 mask.show()
-    #If the selected annotation mode is "Multi-Slice-Annotation", that means the binary mask created would be a 3D stack based on theuser annotation           
-    elif Annotation_mode == "Multi-Slice-Annotation":        
-        if img_type == "3D":
-            if slices > 1:
-                mask = threshold_multi_slice_annotation(img, 1, 1, 1, slices, 1, 1)
-            elif frames > 1:    
-                mask = threshold_multi_slice_annotation(img, 1, 1, 1, 1, 1, frames) 
-            mask.show()
-        elif img_type == "4D":
-            # If the image has multiple slices and frames, let the user choose the appropriate slice number and frame number
-            if channels == 1:
+            elif img_type == "4D":
+                # If the image has multiple slices and frames, let the user choose the appropriate slice number and frame number
+                if channels == 1:
+                    Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
+                    Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)                                   
+                    Win.showDialog()
+                    if Win.wasOKed():
+                        Slice_number = int(Win.getNextNumber())  
+                        prefs.put("Slice_number", Slice_number)
+                        mask = threshold_multi_slice_annotation(img, 1, 1, Slice_number, Slice_number, 1, frames)
+                        mask.show()
+                # If the image has multiple channels and frames, let the user choose the appropriate channel number and frame number        
+                elif slices == 1:
+                    Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
+                    Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)                                   
+                    Win.showDialog()
+                    if Win.wasOKed():
+                        Channel_number = int(Win.getNextNumber())  
+                        prefs.put("Channel_number", Channel_number)
+                        mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, 1, 1, 1, frames)
+                        mask.show()
+                # If the image has multiple slices and channels, let the user choose the appropriate slice number and channel number        
+                elif frames == 1:
+                    Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
+                    Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)                                   
+                    Win.showDialog()
+                    if Win.wasOKed():
+                        Channel_number = int(Win.getNextNumber())  
+                        prefs.put("Channel_number", Channel_number)
+                        mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, 1, slices, 1, 1)
+                        mask.show()
+            elif img_type == "5D":
+                # Let the user choose the appropriate slice number, channel number and frame number
                 Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
-                Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)                                   
+                Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
+                Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)
                 Win.showDialog()
                 if Win.wasOKed():
+                    Channel_number = int(Win.getNextNumber())
                     Slice_number = int(Win.getNextNumber())  
+                    prefs.put("Channel_number", Channel_number)
                     prefs.put("Slice_number", Slice_number)
-                    mask = threshold_multi_slice_annotation(img, 1, 1, Slice_number, Slice_number, 1, frames)
+                    mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, 1, frames)
                     mask.show()
-            # If the image has multiple channels and frames, let the user choose the appropriate channel number and frame number        
-            elif slices == 1:
-                Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
-                Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)                                   
-                Win.showDialog()
-                if Win.wasOKed():
-                    Channel_number = int(Win.getNextNumber())  
-                    prefs.put("Channel_number", Channel_number)
-                    mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, 1, 1, 1, frames)
-                    mask.show()
-            # If the image has multiple slices and channels, let the user choose the appropriate slice number and channel number        
-            elif frames == 1:
-                Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
-                Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)                                   
-                Win.showDialog()
-                if Win.wasOKed():
-                    Channel_number = int(Win.getNextNumber())  
-                    prefs.put("Channel_number", Channel_number)
-                    mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, 1, slices, 1, 1)
-                    mask.show()
-        elif img_type == "5D":
-            # Let the user choose the appropriate slice number, channel number and frame number
-            Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
-            Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
-            Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)
-            Win.showDialog()
-            if Win.wasOKed():
-                Channel_number = int(Win.getNextNumber())
-                Slice_number = int(Win.getNextNumber())  
-                prefs.put("Channel_number", Channel_number)
-                prefs.put("Slice_number", Slice_number)
-                mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, 1, frames)
-                mask.show()
 
-### Create a graphical user interface (GUI) for Virtual Orientation Toolbar
-Win = GenericDialogPlus("Virtual Orientation Toolbar") 
-Win.addChoice("Tasks", ["Centering", "Rotation","Centering+Rotation"], prefs.get("Tasks","Centering+Rotation"))
-Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
-Win.addChoice("Center_Of_Rotation", ["Object_center", "Image_center"], prefs.get("Center_Of_Rotation","Image_center"))
-Win.addChoice("Enlarge", ["Yes", "No"], prefs.get("Enlarge","No")) 
-Win.addChoice("Object_Polarity", ["None", "Left-Right/Top-Bottom", "Right-Left/Bottom-Top"], prefs.get("Object_Polarity","None"))
-Win.showDialog()
-if Win.wasOKed():  
-    task = Win.getNextChoice()
-    orientation = Win.getNextChoice()
-    center_of_rotation = Win.getNextChoice()
-    enlarge = Win.getNextChoice()
-    object_polarity = Win.getNextChoice()
-    prefs.put("Tasks", task)
-    prefs.put("Orientation", orientation)
-    prefs.put("Center_Of_Rotation", center_of_rotation)
-    prefs.put("Enlarge", enlarge)
-    prefs.put("Object_Polarity", object_polarity)
+    ### Create a graphical user interface (GUI) for Virtual Orientation Toolbar
+    Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj) - Annotation Assisted Alignment") 
+    # Add a message with the specified font
+    custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
+    # Add a message with the specified font
+    Win.addMessage("Object alignment settings",custom_font_h1) 
+    Win.addChoice("Tasks", ["Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"], prefs.get("Tasks","Center object and then align to orientation"))
+    # Create a Font instance
+    Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
+    Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
+    Win.addChoice("Alignement with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignement with object pointing to","Any"))
+    # Add a message with the specified font
+    Win.addMessage("Additional options",custom_font_h1) 
+    Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
+    Win.addCheckbox("Log File Output", prefs.getInt("Log_Window", False)) 
+    # Display the GUI to the user.
+    Win.showDialog()
+    if Win.wasOKed():  
+        task = Win.getNextChoice()
+        orientation = Win.getNextChoice()
+        center_of_rotation = Win.getNextChoice()
+        object_polarity = Win.getNextChoice()
+        enlarge = Win.getNextBoolean() 
+        log_window = Win.getNextBoolean()
+        prefs.put("Tasks", task)
+        prefs.put("Orientation", orientation)
+        prefs.put("Center_Of_Rotation", center_of_rotation)
+        prefs.put("Object_Polarity", object_polarity)
+        prefs.put("Enlarge", enlarge)
+        prefs.put("log_window", log_window) 
 
 
-    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity)
-    imp_out = output_image_maker(img, ip_list)
-    imp_out.show()
-    imp_out.changes = True
+        if log_window == True:
+            IJ.log(" Filename : " + str(img.getTitle()))
+        ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,log_window)
+        imp_out = output_image_maker(img, ip_list)
+        imp_out.show()
+        imp_out.changes = True
