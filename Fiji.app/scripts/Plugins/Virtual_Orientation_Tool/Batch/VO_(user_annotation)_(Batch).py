@@ -5,6 +5,7 @@ from ij.macro import MacroConstants
 from ij.plugin import ImageCalculator,Duplicator, ImageInfo,Commands
 from ij.gui import WaitForUserDialog, GenericDialog
 from fiji.util.gui import GenericDialogPlus
+from java.awt import Font
 import os 
 ##Calling the utils file 
 from VOT_Utils import process_input_img,output_image_maker,CustomWaitDialog
@@ -163,21 +164,34 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
     return mask
 
 
-Win = GenericDialogPlus("User Guided Virtual Orientation Toolbar (Batch)")
+Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj)_Batch - Annotation Assisted Alignment")
+# Add a message with the specified font
+custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
+Win.addMessage("Input Configuration",custom_font_h1) 
 Win.addDirectoryOrFileField("Image directory selector", prefs.get("InputDirPath", ""))
-Win.addDirectoryOrFileField("Output directory", prefs.get("OutputDirPath", ""))
-Win.addChoice("Save_Format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format", "tiff"))
-Win.addChoice("Tasks", ["Centering", "Rotation","Centering+Rotation"], prefs.get("Tasks","Centering+Rotation"))
+
+# Add a message with the specified font
+Win.addMessage("Object alignment settings",custom_font_h1) 
+# Create a Font instance
+Win.addChoice("Tasks", ["Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"], prefs.get("Tasks","Center object and then align to orientation"))
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
-Win.addChoice("Center_Of_Rotation", ["Object_center", "Image_center"], prefs.get("Center_Of_Rotation","Image_center"))
-Win.addChoice("Enlarge", ["Yes", "No"], prefs.get("Enlarge","No")) 
-Win.addChoice("Object_Polarity", ["None", "Left-Right/Top-Bottom", "Right-Left/Bottom-Top"], prefs.get("Object_Polarity","None"))
-Win.addCheckbox("Save_Mask_File", prefs.getInt("SaveMask", False)) 
-Win.addChoice("Mask_Save_Format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format", "tiff"))
+Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
+Win.addChoice("Alignement with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignement with object pointing to","Any"))
+# Add a message with the specified font
+Win.addMessage("Additional options",custom_font_h1) 
+Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
+Win.addCheckbox("Log File Output", prefs.getInt("Log_Window", False)) 
+
+Win.addMessage("Output Configuration",custom_font_h1) 
+Win.addDirectoryOrFileField("Save processed images/masks to", prefs.get("OutputDirPath", ""))
+Win.addChoice("Save images in format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format_out", "tiff"))
+
+Win.addCheckbox("Save mask file", prefs.getInt("SaveMask", False)) 
+Win.addToSameRow()
+Win.addChoice("Save masks in format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format_mask", "tiff"))
 
 # Display a message asking users to cite the paper if they use the plugin.
-Win.addMessage("""If you use this plugin please cite:
-Cite paper""") 
+Win.addMessage("""If you use this plugin please cite: Cite paper""") 
 
 # Provide a link to the plugin's documentation on GitHub.
 Win.addHelp("https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/README.md")  
@@ -187,23 +201,26 @@ Win.showDialog()
 
 if Win.wasOKed():  
     InputDirPath = Win.getNextString()
-    OutputDirPath = Win.getNextString()
-    Save_Format = Win.getNextChoice()
     task = Win.getNextChoice()
     orientation = Win.getNextChoice()
     center_of_rotation = Win.getNextChoice()
-    enlarge = Win.getNextChoice()
     object_polarity = Win.getNextChoice()
+    enlarge = Win.getNextChoice()
+    log_window = Win.getNextBoolean()
+    OutputDirPath = Win.getNextString()
+    Save_Format = Win.getNextChoice()
     save_mask  = Win.getNextBoolean() 
-    Mask_Save_Format = Win.getNextChoice()
+    Mask_Save_Format = Win.getNextChoice()    
+
     prefs.put("InputDirPath", InputDirPath)
-    prefs.put("OutputDirPath", OutputDirPath)
-    prefs.put("Save_Format", Save_Format)
     prefs.put("Tasks", task)
     prefs.put("Orientation", orientation)
     prefs.put("Center_Of_Rotation", center_of_rotation)
-    prefs.put("Enlarge", enlarge)
     prefs.put("Object_Polarity", object_polarity)
+    prefs.put("Enlarge", enlarge)
+    prefs.put("log_window", log_window)
+    prefs.put("OutputDirPath", OutputDirPath)
+    prefs.put("Save_Format", Save_Format)
     prefs.put("Save_Mask", save_mask)
     prefs.put("Mask_Save_Format", Mask_Save_Format)
 
@@ -391,15 +408,20 @@ if Win.wasOKed():
                             mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, 1, frames)
                             mask.show()
 
-            ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity)
+            if log_window == True:
+                IJ.log(" Filename : " + str(img.getTitle()))
+            
+            ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,log_window)
             imp_out = output_image_maker(img, ip_list)
             imp_out.show()
+
             out_filename = imp_out.getTitle()
             out_file_path = os.path.join(OutputDirPath, out_filename)
             IJ.saveAs(imp_out, Save_Format,out_file_path)
             
             if save_mask == True:
-                mask_file_path = os.path.join(Mask_Directory_Path, out_filename)
+                out_filename_mask = img.getTitle()+"_Mask"
+                mask_file_path = os.path.join(Mask_Directory_Path, out_filename_mask)
                 IJ.saveAs(mask, Mask_Save_Format,mask_file_path)
 
             Commands.closeAll()
