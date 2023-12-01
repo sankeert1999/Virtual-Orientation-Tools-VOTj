@@ -53,7 +53,7 @@ if Win.wasOKed():
     orientation = Win.getNextChoice()
     center_of_rotation = Win.getNextChoice()
     object_polarity = Win.getNextChoice()
-    enlarge = Win.getNextChoice()
+    enlarge = Win.getNextBoolean()
     log_window = Win.getNextBoolean()
     OutputDirPath = Win.getNextString()
     Save_Format = Win.getNextChoice()
