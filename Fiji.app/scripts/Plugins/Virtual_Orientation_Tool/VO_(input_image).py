@@ -3,7 +3,7 @@
 from ij import IJ
 from fiji.util.gui import GenericDialogPlus
 from java.awt import Font
-Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj) - User-Specified Inputs")
+Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj) - Direct User Input")
 # Add a message with the specified font
 custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
 Win.addMessage("Input Configuration",custom_font_h1) 
