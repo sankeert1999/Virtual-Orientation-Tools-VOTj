@@ -8,7 +8,7 @@ from fiji.util.gui import GenericDialogPlus
 from java.awt import Font
 import os 
 
-Win = GenericDialogPlus("VOTj_Batch - Custom Macro")
+Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj)_Batch - Custom Macro")
 # Add a message with the specified font
 custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
 Win.addMessage("Input Configuration",custom_font_h1) 
