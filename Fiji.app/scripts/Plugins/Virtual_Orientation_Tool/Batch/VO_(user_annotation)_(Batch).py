@@ -420,7 +420,7 @@ if Win.wasOKed():
             IJ.saveAs(imp_out, Save_Format,out_file_path)
             
             if save_mask == True:
-                out_filename_mask = img.getTitle()+"_Mask"
+                out_filename_mask = img.getTitle()[:img.getTitle().rfind(".")]+"_Mask"
                 mask_file_path = os.path.join(Mask_Directory_Path, out_filename_mask)
                 IJ.saveAs(mask, Mask_Save_Format,mask_file_path)
 
