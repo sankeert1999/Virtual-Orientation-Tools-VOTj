@@ -15,7 +15,7 @@ import textwrap
 def wait_dialog_box(mask):
     long_string = textwrap.dedent(""" Mark the object of interest on the image.
     - To increase brush width double left click on the paintbrush icon from the Toolbar.
-    - Press any key, like the spacebar, to swiftly continue instead of clicking the 'Continue' button.""")
+    - Press Spacebar/Enter, to swiftly continue instead of clicking the 'Continue' button.""")
 
     # Split the long string into sentences
     sentences = long_string.split('\n')
@@ -228,7 +228,8 @@ if Win.wasOKed():
         # Specify the path for the new directory
         Mask_Directory_Path = os.path.join(OutputDirPath, "Mask_VOTj")
         # Create the directory
-        os.makedirs(Mask_Directory_Path)
+        if not os.path.exists(Mask_Directory_Path):
+            os.makedirs(Mask_Directory_Path)
 
     # Get a list of files in the folder
     files = os.listdir(InputDirPath)

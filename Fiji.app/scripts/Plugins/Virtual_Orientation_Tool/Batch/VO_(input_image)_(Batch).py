@@ -80,7 +80,8 @@ if Win.wasOKed():
         # Specify the path for the new directory
         Mask_Directory_Path = os.path.join(OutputDirPath, "Mask_VOTj")
         # Create the directory
-        os.makedirs(Mask_Directory_Path)
+        if not os.path.exists(Mask_Directory_Path):
+            os.makedirs(Mask_Directory_Path)
 
     # Get a list of files in the folder
     files = os.listdir(InputDirPath)
