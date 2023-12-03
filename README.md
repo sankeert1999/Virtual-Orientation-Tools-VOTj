@@ -68,63 +68,72 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
   </p>
   
   - ### VOTj Annotation Assisted Alignment
+    In this specific operational mode of the VOTj tool, the user is prompted to annoate the object of interest and based on these annotations 
+    the input image is alingned.
+    - #### Selecting the input image
+    <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_1.png" width="50%" height="50%">
+      </p>
+      
+    - #### Selecting the annotation mode
+      User would be prompted with a window to select the annotation mode (only for images with dimensionality > 3).
+      There are two annoation mode Single-Slice-Annotation and Multi-Slice-Annotation.
+      - ##### **Single-Slice-Annotation**
+        **Single-Slice-Annotation** is ideal when you want to align a single slice of your input image. This mode is useful in 
+        various situations. For example, if you have a 3D stack with multiple Z slices and want to align the entire stack based 
+        on a single annotated slice, this mode 
+        allows you to annotate that specific slice (typically the most focused one).
+      - ##### **Multi-Slice Annotation**
+        **Multi-Slice-Annotation**, on the other hand, allows you to annotate multiple slices to achieve image alignment. This 
+        mode is beneficial when your image data is more complex. For instance, if you have a 5D stack containing 3 channels, 10 
+        slices, and 20 timepoints, choosing 
+        **Multi-Slice-Annotation** lets you select both the channel and the slice number to annotate across all timepoints. The 
+        tool then aligns the image based on this comprehensive annotation across the specified slices, ensuring precise 
+        alignment even in complex 5D datasets.
+
+      These two annotation modes provide you with the flexibility to align images efficiently based on your specific image 
+      characteristics and alignment requirements. In essence, through annotation, you create a mask file that guides the 
+      alignment process. To better understand how to design your mask according to your input,[consult the following table](#mask), which           outlines the different mask files expected by the tool for various input image scenarios.
+<p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_2.png" width="50%" height="50%">
+      </p>
+      
+  - #### Selecting appropriate Slice/Stack for annotation
+    After selecting the appropriate annotation mode, the user will be prompted to choose the image or stack for annotation. Depending on 
+    whether you've chosen **Single-Slice-Annotation** or **Multi-Slice-Annotation**, the tool will guide you accordingly. For instance, if 
+    you have a 3D stack with multiple Z slices and opt for **Single-Slice-Annotation** mode, you will be prompted to select the specific Z 
+    slice you wish to annotate.
+<p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_3.png" width="50%" height="50%">
+      </p>
+
+  - #### Annotating the object of interest 
+    Once you've selected the image for annotation, the tool will present the image or stack for annotation, and the paintbrush tool will be 
+    automatically activated with a white color. To adjust the brush width, simply double-click on the paintbrush tool icon. It's important to 
+    note that drawing on the image before confirming the width will make the annotation         permanent and irreversible.
+    Here are some tips for effective annotation:
+     - When marking the object of interest, ensure it covers the orientation you want to align.
+     - Try to position the annotation somewhat centered on the object of interest.
+     - For multi-slice annotation, aim for a consistent drawing that doesn't drastically change across the stack, particularly at the 
+       centers."
+  <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_4.png" width="80%" height="80%">
+      </p>
+
+  - #### Configuring the VOTj panel
+    Now, the user is prompted to select the alignment operation they need for their image..[Virtual Orientation Tool Overview](#virtual-orientation-tool-overview)
+  <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_5.png" width="60%" height="60%">
+      </p>
+
 - ## Batch Mode
   Batch Mode allows users to batch process an entire folder of images. This mode provides three suboptions.
   - ### VOTj Batch Direct User Input
   - ### VOTj Batch Annotation Assisted Alignment
   - ### VOTj Batch Custom Macro
 
-- ## VO (user annotation)
-   In this specific operational mode of the VOTj tool, the user is prompted to annoate the object of interest and based on these annotations the input image is alingned.
-  - ### Selecting the input image
-    <p align="center">
-    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_1.png" width="50%" height="50%">
-      </p>
-  - ### Selecting the annotation mode
-    User would be prompted with a window to select the annotation mode (only for images with dimensionality > 3).
-    There are two annoation mode Single-Slice-Annotation and Multi-Slice-Annotation.
-    - #### **Single-Slice-Annotation**
-      **Single-Slice-Annotation** is ideal when you want to align a single slice of your input image. This mode is useful in 
-      various situations. For example, if you have a 3D stack with multiple Z slices and want to align the entire stack based 
-      on a single annotated slice, this mode 
-      allows you to annotate that specific slice (typically the most focused one).
-    - #### **Multi-Slice Annotation**
-      **Multi-Slice-Annotation**, on the other hand, allows you to annotate multiple slices to achieve image alignment. This 
-      mode is beneficial when your image data is more complex. For instance, if you have a 5D stack containing 3 channels, 10 
-      slices, and 20 timepoints, choosing 
-      **Multi-Slice-Annotation** lets you select both the channel and the slice number to annotate across all timepoints. The 
-      tool then aligns the image based on this comprehensive annotation across the specified slices, ensuring precise 
-      alignment even in complex 5D datasets.
 
-    These two annotation modes provide you with the flexibility to align images efficiently based on your specific image 
-    characteristics and alignment requirements. In essence, through annotation, you create a mask file that guides the 
-    alignment process. To better understand how to design your mask according to your input,[consult the following table](#mask), which outlines the different mask files expected by the tool for various input image scenarios.
-<p align="center">
-    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_2.png" width="50%" height="50%">
-      </p>
-      
-  - ### Selecting appropriate Slice/Stack for annotation
-    After selecting the appropriate annotation mode, the user will be prompted to choose the image or stack for annotation. Depending on whether you've chosen **Single-Slice-Annotation** or **Multi-Slice-Annotation**, the tool will guide you accordingly. For instance, if you have a 3D stack with multiple Z slices and opt for **Single-Slice-Annotation** mode, you will be prompted to select the specific Z slice you wish to annotate.
-<p align="center">
-    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_3.png" width="50%" height="50%">
-      </p>
-
-  - ### Annotating the object of interest 
-    Once you've selected the image for annotation, the tool will present the image or stack for annotation, and the paintbrush tool will be automatically activated with a white color. To adjust the brush width, simply double-click on the paintbrush tool icon. It's important to note that drawing on the image before confirming the width will make the annotation         permanent and irreversible.
-    Here are some tips for effective annotation:
-    - When marking the object of interest, ensure it covers the orientation you want to align.
-    - Try to position the annotation somewhat centered on the object of interest.
-    - For multi-slice annotation, aim for a consistent drawing that doesn't drastically change across the stack, particularly at the centers."
-  <p align="center">
-    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_4.png" width="80%" height="80%">
-      </p>
-
-  - ### Configuring the VOTj panel
-    Now, the user is prompted to select the alignment operation they need for their image..[Virtual Orientation Tool Overview](#virtual-orientation-tool-overview)
-  <p align="center">
-    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_5.png" width="60%" height="60%">
-      </p>
-
+   
 
 
      
