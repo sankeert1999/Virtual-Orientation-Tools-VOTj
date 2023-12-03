@@ -1,10 +1,10 @@
-# Virtual Orienation Tool FIJI (VOTj)
+# Virtual Orientation Tool for FIJI (VOTj)
 This tool is designed to center and align objects of interest both horizontally and vertically from their base orientation. It requires an input image and a corresponding mask that defines the object of interest within the image.
 This tool is adapted at aligning a single object in each image, and this alignment can seamlessly propagate across multiple channels in the case of multichannel images. 
 It offers compatibility across a wide range of image types, including 2D, 3D, 4D, and 5D data.
 ![Intro Image](https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT.png)
 
-# Virtual Orientation Tool Overview
+# VOTj Overview
 The tool starts with a GUI asking for 
 ## Input image 
 Input image to be aligned (compatibile across a wide range of image types, including 2D, 3D, 4D, and 5D data.)
@@ -57,12 +57,23 @@ User have teh option to enalrge the output image, enlarging the image serves the
   </p>
 
 # VOTj Modes
-- ## VO (input image)
-  In this specific operational mode of the VOTj tool, the user is prompted to select an input image (the image to be aligned) and an associated mask (image or 3D stack) that corresponds to the input image. The tool then proceeds to generate the output image after collecting essential alignment information from the user. [Virtual Orientation Tool Overview](#virtual-orientation-tool-overview)
+The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
+- ## Single Mode
+  In this mode, users can orient a single image at a time. This mode provides two suboptions.
+  - ### VOTj Direct User Input
+    In this specific operational mode of the VOTj tool, the user is prompted to select an input image (the image to be aligned) and an associated mask (2D or 3D stack) that corresponds to       the input image. The tool then proceeds to generate the output image after collecting essential alignment information from the user.
+    [Virtual Orientation Tool Overview](#virtual-orientation-tool-overview)
 <p align="center">
 <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_input_image.png" width="50%" height="50%">
   </p>
   
+  - ### VOTj Annotation Assisted Alignment
+- ## Batch Mode
+  Batch Mode allows users to batch process an entire folder of images. This mode provides three suboptions.
+  - ### VOTj Batch Direct User Input
+  - ### VOTj Batch Annotation Assisted Alignment
+  - ### VOTj Batch Custom Macro
+
 - ## VO (user annotation)
    In this specific operational mode of the VOTj tool, the user is prompted to annoate the object of interest and based on these annotations the input image is alingned.
   - ### Selecting the input image
