@@ -70,7 +70,7 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
       </p>
 
     - #### <ins> Configuring the VOTj panel </ins>
-      Now, the user is prompted to select the alignment operation they need for their image.[GUI configuration overview](#VOTj_GUI_Overview)
+      Now, the user is prompted to select the alignment operation they need for their image.[GUI configuration overview](#VOTjGUIOverview)
       <p align="center">
       <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_5.png" width="60%" height="60%">
       </p>
