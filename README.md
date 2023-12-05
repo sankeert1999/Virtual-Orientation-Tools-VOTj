@@ -11,7 +11,7 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
   In this mode, users can orient a single image at a time. This mode provides two suboptions.
   - ### VOTj Direct User Input
     In this specific operational mode of the VOTj tool, the user is prompted to select an input image (the image to be aligned) and an associated mask (2D or 3D stack) that corresponds to       the input image. The tool then proceeds to generate the output image after collecting essential alignment information from the user.
-    [GUI configuration overview](#VOTj_GUI_Overview)
+    [GUI configuration overview](#VOTj GUI Overview)
     <p align="center">
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_input_image.png" width="50%" height="50%">
     </p>
