@@ -5,6 +5,7 @@
 #@ String (choices={"Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"}, label = "Object Polarity",style="listBox") object_polarity
 #@ String (choices={"Object center", "Image center"}, label = "Center of rotation",style="radioButtonHorizontal") center_of_rotation 
 #@ Boolean (label="Enlarge Image") enlarge
+#@ String (choices={"Black","White", "Mean"}, label = "Fill background with ",style="listBox") background
 #@ Boolean (label="Log File Output") log_window
 
 
@@ -17,7 +18,7 @@ import math
 
 try:
     from org.bytedeco.javacpp.opencv_core import Mat, MatVector, CvMat,Scalar,split,PCACompute,Point2f,Size,cvmSet,copyMakeBorder,BORDER_CONSTANT,flip,Rect
-    from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine,boundingRect
+    from org.bytedeco.javacpp.opencv_imgproc import findContours, RETR_LIST, CHAIN_APPROX_NONE, contourArea,moments,drawContours,getRotationMatrix2D,warpAffine,boundingRect,INTER_LINEAR 
     from ijopencv.ij      import ImagePlusMatConverter as imp2mat
     from ijopencv.opencv  import MatImagePlusConverter as mat2ip
     
@@ -37,7 +38,9 @@ IMAGE_CENTER = "Image center"
 ANY = "Any"
 LEFT_TOP = "Left (for horizontal) / Top (for vertical)"
 RIGHT_BOTTOM = "Right (for horizontal) / Bottom (for vertical)"
- 
+BLACK = "Black"
+WHITE = "White"
+MEAN = "Mean" 
 
 
 
@@ -300,7 +303,7 @@ def set_object_polarity(imgMat_out, object_polarity, left_top_mean_sum, right_bo
     return imgMat_out
 
 
-def rotate_image(imMat, angle, Com_x, Com_y, W, H):
+def rotate_image(imMat, angle, Com_x, Com_y, W, H,background_value):
     """
     Rotate an input image by a specified angle around a given center.
 
@@ -311,6 +314,7 @@ def rotate_image(imMat, angle, Com_x, Com_y, W, H):
     Com_y -- Y-coordinate of the center of rotation.
     W -- Width of the output image.
     H -- Height of the output image.
+    background_value -- Pixel value of the background created post rotation.
 
     Returns:
     imMat_out -- The rotated image as a Mat.
@@ -332,13 +336,18 @@ def rotate_image(imMat, angle, Com_x, Com_y, W, H):
     
     # Define the size of the output image as a Size
     szi = Size(int(W), int(H))
+
+    if isinstance(background_value, tuple): # rgb case
+        background_value = Scalar(*background_value)
+    else :
+        background_value = Scalar(float(background_value))
     
     # Apply the affine transformation to rotate the image
-    warpAffine(imMat, imMat_out, M_rotate, szi)
+    warpAffine(imMat, imMat_out, M_rotate, szi,INTER_LINEAR,BORDER_CONSTANT,background_value)
 
     return imMat_out
 
-def translate_image(imMat, Com_x, Com_y, W, H):
+def translate_image(imMat, Com_x, Com_y, W, H,background_value):
     """
     Translate the input image to reposition its center of mass (COM).
 
@@ -348,6 +357,7 @@ def translate_image(imMat, Com_x, Com_y, W, H):
     Com_y -- Y-coordinate of the center of mass.
     W -- Width of the output image.
     H -- Height of the output image.
+    background_value -- Pixel value of the background created post translation.
 
     Returns:
     imMat_out -- Translated image as a Mat.
@@ -373,16 +383,24 @@ def translate_image(imMat, Com_x, Com_y, W, H):
     # Apply translation to the input image
     imMat_out = Mat()
     szi = Size(int(W), int(H))
-    warpAffine(imMat, imMat_out, M_translate, szi)
+    
+    if isinstance(background_value, tuple): # rgb case
+        background_value = Scalar(*background_value)
+    else :
+        background_value = Scalar(float(background_value))
+
+    warpAffine(imMat, imMat_out, M_translate, szi,INTER_LINEAR,BORDER_CONSTANT,background_value)
     
     return imMat_out
 
-def enlarge_image(imMat,task):
+def enlarge_image(imMat,task,background_value):
     """
     Enlarge the input image.
 
     Arguments:
     imMat -- Input image as a Mat.
+    task (str): The transformation task ("Rotation", "Centering+Rotation", or "No Rotation").
+    background_value -- Pixel value of the background created post enalarging the canvas.
 
     Returns:
     imMat_en -- Enlarged square image as a Mat.
@@ -421,8 +439,14 @@ def enlarge_image(imMat,task):
             enlarged_dims_x = 2*imMat.cols()
             enlarged_dims_y = 2*imMat.rows()
             imMat_en = Mat(enlarged_dims_y, enlarged_dims_x, imMat.type())    
+
+    if isinstance(background_value, tuple): # rgb case
+        background_value = Scalar(*background_value)
+    else :
+        background_value = Scalar(float(background_value))
+    
     # Copy the input image into the center of the enlarged square image
-    copyMakeBorder(imMat, imMat_en, top, bottom, left, right, BORDER_CONSTANT, Scalar(0))
+    copyMakeBorder(imMat, imMat_en, top, bottom, left, right, BORDER_CONSTANT, background_value)
     
     return imMat_en
 
@@ -449,7 +473,7 @@ def compute_transformation(maskProc, enlarge, orientation,task):
     
     # Check if image enlargement is requested
     if enlarge == True:
-        maskMat = enlarge_image(maskMat,task)
+        maskMat = enlarge_image(maskMat,task,0)
     
     # Detect the largest contour in the binary mask
     largest_contour = detectContours(maskMat)
@@ -473,7 +497,7 @@ def compute_transformation(maskProc, enlarge, orientation,task):
     # Return the center coordinates, angle, and the transformed image
     return Com_x, Com_y, angle
 
-def transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value):
+def transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, background, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value):
     """
     Apply the transformation specified by task to the currently active image-plane of the ImagePlus.
     The current plane is set via imp.setPosition(c, z, t) or imp.setPositionWithoutUpdate(c, z, t) for better performance.
@@ -490,11 +514,31 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, object_polar
         left_top_mean (float): Sum of mean intensity of the left/top part of the object.
         right_bottom_mean (float): Sum of mean intensity of the right/bottom part of the object.
         flip_value -- Flag indicating the axis of flipping  (0 for vertical, 1 for horizontal).
+        background (str) -- Background color
+        
 
     Returns:
         img_out: The transformed image.
     """
     imgProc = img.getProcessor()
+
+    if background == BLACK:
+        background_value = 0
+    elif background == WHITE:
+        if (img.getBitDepth() == 8):
+            background_value = 255        
+        elif (img.getBitDepth() == 24):
+            background_value = (255.0,255.0,255.0,1.0)
+        elif img.getBitDepth() == 16:
+            background_value = 65535
+        elif img.getBitDepth() == 32:
+            background_value = 2**32 - 1 
+    elif background == MEAN:
+        imgProc_stat = imgProc.getStats()
+        background_value = imgProc_stat.mean
+    else : 
+        background_value = 0
+
 
     # If there is no rotation angle, return a duplicate of the input image
     if task == ROTATION and angle == 0:
@@ -509,13 +553,13 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, object_polar
 
     # Enlarge the input image if specified
     if enlarge == True:
-        imgMat = enlarge_image(imgMat, task)
+        imgMat = enlarge_image(imgMat, task,background_value)
 
     W, H = imgMat.cols(), imgMat.rows()
 
     if task == CENTERING:
         # Translate the input image using the calculated translation coordinates
-        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
+        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H,background_value)
 
     elif task == ROTATION:
         # Set center of rotation coordinates to image center if specified
@@ -524,14 +568,14 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, object_polar
             Com_y = int((H / 2))
 
         # Rotate the input image using the calculated angle and center coordinates
-        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H)
+        imgMat_out = rotate_image(imgMat, angle, Com_x, Com_y, W, H,background_value)
 
     elif task == CENTERING_ROTATION:
         # Translate the input image using the calculated translation coordinates
-        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H)
+        imgMat_out = translate_image(imgMat, Com_x, Com_y, W, H,background_value)
 
         # Rotate the input image using the calculated angle and center coordinates
-        imgMat_out = rotate_image(imgMat_out, angle, int(W / 2), int(H / 2), W, H)
+        imgMat_out = rotate_image(imgMat_out, angle, int(W / 2), int(H / 2), W, H,background_value)
 
     # Set object polarity if specified
     if (object_polarity == LEFT_TOP) or (object_polarity == RIGHT_BOTTOM):
@@ -542,7 +586,7 @@ def transform_current_plane(img, task, center_of_rotation, enlarge, object_polar
 
 
 
-def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge, object_polarity,log_window):
+def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge, object_polarity,background,log_window):
     """
     Process input images based on specified transformations.
 
@@ -591,7 +635,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
             # Calculate object polarity if required
             if (object_polarity == LEFT_TOP) or (object_polarity == RIGHT_BOTTOM):
                 left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
-                mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
+                mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity,0,Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                 left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation)
             else:
                 left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
@@ -604,7 +648,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                         IJ.showProgress(current_status, (img.getNFrames() * img.getNChannels() * img.getNSlices()))
                         # Set the position of the input image
                         img.setPositionWithoutUpdate(channel_index, z_slice, stack_Index)
-                        img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
+                        img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity,background, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                         # Append the transformed image to the list
                         ip_list.append(img_out)
                 if log_window == True:
@@ -619,7 +663,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                     current_status = current_status + 1
                     IJ.showProgress(current_status, (img.getNFrames() * img.getNChannels() * img.getNSlices()))
                     img.setPositionWithoutUpdate(channel_index, stack_Index, img.getNFrames())
-                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
+                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, background,Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
                 if log_window == True:
@@ -643,7 +687,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
         # Calculate object polarity if required
         if (object_polarity == LEFT_TOP) or (object_polarity == RIGHT_BOTTOM):
             left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
-            mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
+            mask_proc_out = transform_current_plane(mask, task, center_of_rotation, enlarge, object_polarity, 0, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
             left_top_mean_sum, right_bottom_mean_sum, flip_value = get_object_polarity(mask_proc_out, orientation)
         else:
             left_top_mean_sum, right_bottom_mean_sum, flip_value = 0, 0, 0
@@ -655,7 +699,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                     current_status = current_status + 1
                     IJ.showProgress(current_status, (img.getNFrames() * img.getNChannels() * img.getNSlices()))
                     img.setPositionWithoutUpdate(channel_index, z_slice, frame_index)
-                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
+                    img_out = transform_current_plane(img, task, center_of_rotation, enlarge, object_polarity, background, Com_x, Com_y, angle, left_top_mean_sum, right_bottom_mean_sum, flip_value)
                     # Append the transformed image to the list
                     ip_list.append(img_out)
 
@@ -732,8 +776,8 @@ def output_image_maker(img, ip_list):
 
 if __name__ in ['__main__', '__builtin__']:
     if log_window == True:
-        IJ.log(" Filename : " + str(img.getTitle()))
-    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,log_window)
+        IJ.log("Filename : " + str(img.getTitle()))
+    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,background,log_window)
     imp_out = output_image_maker(img, ip_list)
     imp_out.show()
 
