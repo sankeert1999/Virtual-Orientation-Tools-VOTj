@@ -629,6 +629,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                     IJ.log("Detected object center (X coordinate) : " + str(Com_x))
                     IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
                     IJ.log("Detected object orientation angle : " + str(angle))
+                    IJ.log(" ")
                 return ip_list
                 
             
@@ -656,6 +657,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                     IJ.log("Detected object center (X coordinate) : " + str(Com_x))
                     IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
                     IJ.log("Detected object orientation angle : " + str(angle))
+                    IJ.log(" ")
 
             # If the input image has only one frame and multiple slices
             elif img.getNFrames() == 1 and img.getNSlices() > 1:
@@ -671,6 +673,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                     IJ.log("Detected object center (X coordinate) : " + str(Com_x))
                     IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
                     IJ.log("Detected object orientation angle : " + str(angle))
+                    IJ.log(" ")
     # If the mask is a single image plane
     elif mask.getNDimensions() == 2:
         maskProc = mask.getProcessor()
@@ -682,6 +685,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
                 IJ.log("Detected object center (X coordinate) : " + str(Com_x))
                 IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
                 IJ.log("Detected object orientation angle : " + str(angle))
+                IJ.log(" ")
             return ip_list
 
         # Calculate object polarity if required
@@ -707,6 +711,7 @@ def process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,
             IJ.log("Detected object center (X coordinate) : " + str(Com_x))
             IJ.log("Detected object center (Y coordinate) : " + str(Com_y))
             IJ.log("Detected object orientation angle : " + str(angle))
+            IJ.log(" ")
 
     return ip_list
 
