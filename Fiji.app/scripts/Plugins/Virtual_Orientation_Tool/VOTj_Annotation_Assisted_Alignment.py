@@ -382,15 +382,15 @@ if Win.wasOKed():
         orientation = Win.getNextChoice()
         center_of_rotation = Win.getNextChoice()
         object_polarity = Win.getNextChoice()
-        enlarge = Win.getNextBoolean() 
         background = Win.getNextChoice()
+        enlarge = Win.getNextBoolean() 
         log_window = Win.getNextBoolean()
         prefs.put("Tasks", task)
         prefs.put("Orientation", orientation)
         prefs.put("Center_Of_Rotation", center_of_rotation)
         prefs.put("Object_Polarity", object_polarity)
-        prefs.put("Enlarge", enlarge)
         prefs.put("Fill_background_with", background)
+        prefs.put("Enlarge", enlarge)
         prefs.put("log_window", log_window) 
 
 

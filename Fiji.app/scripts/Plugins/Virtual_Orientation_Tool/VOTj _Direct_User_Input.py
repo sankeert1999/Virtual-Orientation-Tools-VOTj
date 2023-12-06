@@ -18,7 +18,8 @@ Win.addChoice("Tasks", ["Move object to image-center","Align object to desired o
 # Create a Font instance
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
 Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
-Win.addChoice("Alignement with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignement with object pointing to","Any"))
+Win.addChoice("Alignment with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignment with object pointing to","Any"))
+Win.addChoice("Fill background with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
 # Add a message with the specified font
 Win.addMessage("Additional options",custom_font_h1) 
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
@@ -40,6 +41,7 @@ if Win.wasOKed():
     orientation = Win.getNextChoice()
     center_of_rotation = Win.getNextChoice()
     object_polarity = Win.getNextChoice()
+    background = Win.getNextChoice()
     enlarge = Win.getNextBoolean() 
     log_window = Win.getNextBoolean() 
     prefs.put("Image", img.getTitle()) 
@@ -48,14 +50,24 @@ if Win.wasOKed():
     prefs.put("Orientation", orientation)
     prefs.put("Center_Of_Rotation", center_of_rotation)
     prefs.put("Object_Polarity", object_polarity)
+    prefs.put("Fill_background_with", background)
     prefs.put("Enlarge", enlarge)
     prefs.put("log_window", log_window)
 
 
     from VOT_Utils import process_input_img,output_image_maker
     if log_window == True:
-        IJ.log(" Filename : " + str(img.getTitle()))
-    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,log_window)
+        IJ.log("Logging the selected configuration options")
+        IJ.log("Tasks : " + str(task))
+        IJ.log("Orientation : " + str(orientation))
+        IJ.log("Center of rotation : " + str(center_of_rotation))
+        IJ.log("Alignment with object pointing to : " + str(object_polarity))
+        IJ.log("Enlarge canvas (prevent image cropping) : " + str(enlarge))
+        IJ.log("Fill background with : " + str(background))
+        IJ.log("  ")
+        IJ.log("Logging the detected object orienatation")
+        IJ.log("Filename : " + str(img.getTitle()))
+    ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,background,log_window)
     imp_out = output_image_maker(img, ip_list)
     imp_out.show()
     imp_out.changes = True
