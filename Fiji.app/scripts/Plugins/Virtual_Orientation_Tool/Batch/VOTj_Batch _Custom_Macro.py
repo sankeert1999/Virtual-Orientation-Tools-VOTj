@@ -22,7 +22,8 @@ Win.addMessage("Object alignment settings",custom_font_h1)
 Win.addChoice("Tasks", ["Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"], prefs.get("Tasks","Center object and then align to orientation"))
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
 Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
-Win.addChoice("Alignement with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignement with object pointing to","Any"))
+Win.addChoice("Alignment with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignment with object pointing to","Any"))
+Win.addChoice("Fill background with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
 # Add a message with the specified font
 Win.addMessage("Additional options",custom_font_h1) 
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
@@ -53,6 +54,7 @@ if Win.wasOKed():
     orientation = Win.getNextChoice()
     center_of_rotation = Win.getNextChoice()
     object_polarity = Win.getNextChoice()
+    background = Win.getNextChoice()
     enlarge = Win.getNextBoolean()
     log_window = Win.getNextBoolean()
     OutputDirPath = Win.getNextString()
@@ -66,6 +68,7 @@ if Win.wasOKed():
     prefs.put("Orientation", orientation)
     prefs.put("Center_Of_Rotation", center_of_rotation)
     prefs.put("Object_Polarity", object_polarity)
+    prefs.put("Fill_background_with", background)
     prefs.put("Enlarge", enlarge)
     prefs.put("log_window", log_window)
     prefs.put("OutputDirPath", OutputDirPath)
@@ -73,8 +76,16 @@ if Win.wasOKed():
     prefs.put("Save_Mask", save_mask)
     prefs.put("Mask_Save_Format", Mask_Save_Format)
     
-    
-    
+    if log_window == True:
+        IJ.log("Logging the selected configuration options")
+        IJ.log("Tasks : " + str(task))
+        IJ.log("Orientation : " + str(orientation))
+        IJ.log("Center of rotation : " + str(center_of_rotation))
+        IJ.log("Alignment with object pointing to : " + str(object_polarity))
+        IJ.log("Enlarge canvas (prevent image cropping) : " + str(enlarge))
+        IJ.log("Fill background with : " + str(background))
+        IJ.log("  ")
+        
 
     if save_mask == True:
         # Specify the path for the new directory
@@ -102,10 +113,22 @@ if Win.wasOKed():
             
             ##Calling the utils file 
             from VOT_Utils import process_input_img,output_image_maker
+
+            if (img.getHeight() != mask.getHeight()) or (img.getWidth() != mask.getWidth()):
+                IJ.error("Mask dimension and Image dimension don't match")
+                if log_window == True:
+                    IJ.log("Logging the detected object orienatation")
+                    IJ.log("Mask dimension and image dimension don't match, object orientation aborted.")
+                    IJ.log("Filename : " + str(img.getTitle()))
+                    IJ.log(" Filename : " + str(mask.getTitle()))
+                    IJ.log(" ")
+                continue
+
             if log_window == True:
                 IJ.log(" Filename : " + str(img.getTitle()))
+
             
-            ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,log_window)
+            ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,background,log_window)
             imp_out = output_image_maker(img, ip_list)
             imp_out.show()
             out_filename = imp_out.getTitle()
