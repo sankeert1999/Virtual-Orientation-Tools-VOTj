@@ -2,6 +2,7 @@
 
 from ij import IJ
 from ij.macro import MacroConstants
+from ij.process import StackStatistics
 from ij.plugin import ImageCalculator,Duplicator, ImageInfo,Commands
 from ij.gui import WaitForUserDialog, GenericDialog
 from fiji.util.gui import GenericDialogPlus
@@ -13,9 +14,9 @@ import textwrap
 
 
 def wait_dialog_box(mask):
-    long_string = textwrap.dedent(""" Mark the object of interest on the image.
-    - To increase brush width double left click on the paintbrush icon from the Toolbar.
-    - Press Spacebar/Enter, to swiftly continue instead of clicking the 'Continue' button.""")
+    long_string = textwrap.dedent(""" 
+    - Double-click the paintbrush icon to increase brush width.
+    - Press spacebar/enter or click 'Continue' to proceed.""")
 
     # Split the long string into sentences
     sentences = long_string.split('\n')
@@ -26,11 +27,12 @@ def wait_dialog_box(mask):
     # Center-align each sentence individually
     centered_sentences = [sentence.center(line_width) for sentence in sentences]
     centered_text='\n'.join(centered_sentences)
-    wait_dialog = CustomWaitDialog("User Annotation",centered_text)
+    wait_dialog = CustomWaitDialog("Mark the object of interest on the image/stack",centered_text)
     mask.getCanvas().addKeyListener(wait_dialog) # add the dialog as a listener to key events on the image, this way any key event will call keyPressed(self, e) of the dialog 
     wait_dialog.show()
 
 
+# Open your image (replace 'your_image_path' with the actual image path)
 
 def input_image_metadata_extractor(img):
     """
@@ -100,23 +102,28 @@ def threshold_single_slice_annotation(img, channel_start, channel_end, slice_sta
 
     # Display the duplicated slice
     mask.show()
-
-    # Apply a Look-Up Table (LUT) to enhance the visualization
-    IJ.run(mask, "Apply LUT", "")
-
+    # Calculate and set a raw threshold based on the image histogram
+    histogram = mask.getStatistics()
+    max_value = histogram.max + 50
+    mask.setDisplayRange(histogram.min, max_value )
     IJ.setTool("Paintbrush Tool")
     IJ.setForegroundColor(255,255,255)
 
     # Create a dialog instructing the user to annotate the image
     wait_dialog_box(mask)
-    # Calculate and set a raw threshold based on the image histogram
-    histogram = mask.getStatistics()
-    IJ.setRawThreshold(mask, histogram.histMax - 1, histogram.histMax)
+
+    if mask.getBitDepth() == 24:
+        IJ.run(mask, "8-bit", "")
+        IJ.setRawThreshold(mask, 254,255)
+        # Convert the thresholded image to a binary mask
+        IJ.run(mask, "Convert to Mask", "")
+        return mask
+
+    
+    IJ.setRawThreshold(mask, max_value - 1, max_value)
 
     # Convert the thresholded image to a binary mask
     IJ.run(mask, "Convert to Mask", "")
-
-    mask.changes = False
 
     return mask
 
@@ -140,28 +147,32 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
     # Duplicate the specified stack of slices from the image stack
     mask = Duplicator().run(img, channel_start, channel_end, slice_start, slice_end, frame_start, frame_end)
 
-    # Display the duplicated image stack
+    # Display the duplicated slice
     mask.show()
-
-    # Apply a Look-Up Table (LUT) to enhance the visualization for a stack
-    IJ.run(mask, "Apply LUT", "stack")
-
+    # Calculate and set a raw threshold based on the image histogram
+    histogram = StackStatistics(mask)
+    max_value = histogram.max + 50
+    mask.setDisplayRange(histogram.min, max_value )
     IJ.setTool("Paintbrush Tool")
     IJ.setForegroundColor(255,255,255)
 
     # Create a dialog instructing the user to annotate the image
     wait_dialog_box(mask)
 
-    # Calculate and set a raw threshold based on the image histogram
-    histogram = mask.getStatistics()
-    IJ.setRawThreshold(mask, histogram.histMax - 1, histogram.histMax)
+    if mask.getBitDepth() == 24:
+        IJ.run(mask, "8-bit", "")
+        IJ.setRawThreshold(mask, 254,255)
+        # Convert the thresholded image stack to binary masks
+        IJ.run(mask, "Convert to Mask", "method=Default background=Dark black")
+        return mask
+    
+    IJ.setRawThreshold(mask, max_value - 1, max_value)
 
     # Convert the thresholded image stack to binary masks
     IJ.run(mask, "Convert to Mask", "method=Default background=Dark black")
 
-    mask.changes = False
-
     return mask
+
 
 
 Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj)_Batch - Annotation Assisted Alignment")
@@ -177,6 +188,7 @@ Win.addChoice("Tasks", ["Move object to image-center","Align object to desired o
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
 Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
 Win.addChoice("Alignement with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignement with object pointing to","Any"))
+Win.addChoice("Fill background with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
 # Add a message with the specified font
 Win.addMessage("Additional options",custom_font_h1) 
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
@@ -206,6 +218,7 @@ if Win.wasOKed():
     center_of_rotation = Win.getNextChoice()
     object_polarity = Win.getNextChoice()
     enlarge = Win.getNextBoolean()
+    background = Win.getNextChoice()
     log_window = Win.getNextBoolean()
     OutputDirPath = Win.getNextString()
     Save_Format = Win.getNextChoice()
@@ -217,12 +230,23 @@ if Win.wasOKed():
     prefs.put("Orientation", orientation)
     prefs.put("Center_Of_Rotation", center_of_rotation)
     prefs.put("Object_Polarity", object_polarity)
+    prefs.put("Fill_background_with", background)
     prefs.put("Enlarge", enlarge)
     prefs.put("log_window", log_window)
     prefs.put("OutputDirPath", OutputDirPath)
     prefs.put("Save_Format", Save_Format)
     prefs.put("Save_Mask", save_mask)
     prefs.put("Mask_Save_Format", Mask_Save_Format)
+
+    if log_window == True:
+        IJ.log("Logging the selected configuration options")
+        IJ.log("Tasks : " + str(task))
+        IJ.log("Orientation : " + str(orientation))
+        IJ.log("Center of rotation : " + str(center_of_rotation))
+        IJ.log("Alignment with object pointing to : " + str(object_polarity))
+        IJ.log("Enlarge canvas (prevent image cropping) : " + str(enlarge))
+        IJ.log("Fill background with : " + str(background))
+        IJ.log("  ")
 
     if save_mask == True:
         # Specify the path for the new directory
@@ -409,10 +433,21 @@ if Win.wasOKed():
                             mask = threshold_multi_slice_annotation(img, Channel_number, Channel_number, Slice_number, Slice_number, 1, frames)
                             mask.show()
 
+
+            if (img.getHeight() != mask.getHeight()) or (img.getWidth() != mask.getWidth()):
+                IJ.error("Mask dimension and Image dimension don't match")
+                if log_window == True:
+                    IJ.log("Logging the detected object orienatation")
+                    IJ.log("Mask dimension and image dimension don't match, object orientation aborted.")
+                    IJ.log("Filename : " + str(img.getTitle()))
+                    IJ.log(" ")
+                continue
+
             if log_window == True:
-                IJ.log(" Filename : " + str(img.getTitle()))
+                IJ.log("Logging the detected object orienatation")
+                IJ.log("Filename : " + str(img.getTitle()))
             
-            ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,log_window)
+            ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,background,log_window)
             imp_out = output_image_maker(img, ip_list)
             imp_out.show()
 
