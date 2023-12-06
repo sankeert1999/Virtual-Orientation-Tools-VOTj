@@ -26,7 +26,7 @@ def wait_dialog_box(mask):
     # Center-align each sentence individually
     centered_sentences = [sentence.center(line_width) for sentence in sentences]
     centered_text='\n'.join(centered_sentences)
-    wait_dialog = CustomWaitDialog("Mark the object of interest on the image",centered_text)
+    wait_dialog = CustomWaitDialog("Mark the object of interest on the image/stack",centered_text)
     mask.getCanvas().addKeyListener(wait_dialog) # add the dialog as a listener to key events on the image, this way any key event will call keyPressed(self, e) of the dialog 
     wait_dialog.show()
 
