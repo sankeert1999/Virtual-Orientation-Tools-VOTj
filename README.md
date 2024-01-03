@@ -135,6 +135,12 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
     - #### <ins> Left (for horizontal)/Top (for vertical) </ins>
     - #### <ins> Right (for horizontal)/Bottom (for vertical) </ins>
 
+  - ### **Fill background with**
+    This enables the user to customize the background color by choosing from three options: black, white, and mean. The background color is applied to the alignment operation, and the user's selected color determines the background hue. The "mean" option utilizes the mean intensity of the image to fill the background, offering a unique approach to color customization based on the overall image intensity.
+    - #### <ins> Black </ins>
+    - #### <ins> White </ins>
+    - #### <ins> Mean </ins>
+
 - ## Additional options
 
   - ### **Enlarge image**
@@ -146,6 +152,18 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
   - ### **Log File Output**
     Users can choose to generate a log file, including the center coordinates and orientation angle of the detected object.The orientation angle is the smallest angle needed to align the object with the user-defined axis, whether vertical or horizontal. This feature provides users with detailed insights into the processing results for enhanced analysis and documentation.  
    
+- ## Output configuration
+    Exclusive for batch mode
+    - ### **Save processed images/masks to**
+      Users are prompted to provide the corresponding directory information indicating where they would like to save the output files generated.
+    - ### **Save images in format**
+      Users can choose the desired image format for saving the output image, with available options including TIFF (tif, tiff), JPEG (jpg, jpeg), PNG (png), and BMP (bmp).
+    - ### **Save mask file**
+      Users can simply check or uncheck a checkbox to indicate their preference for saving the mask file. If selected, the masks are stored in a folder named **Mask_VOTj** within the 
+      specified 
+      output directory in the option **Save processed images/masks to**.
+    - ### **Save masks in format**
+      Users can choose the desired image format for saving the masks, with available options including TIFF (tif, tiff), JPEG (jpg, jpeg), PNG (png), and BMP (bmp).
 
 
      
