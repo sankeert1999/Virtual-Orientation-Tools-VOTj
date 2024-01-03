@@ -42,7 +42,7 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
 
       These two annotation modes provide you with the flexibility to align images efficiently based on your specific image 
       characteristics and alignment requirements. In essence, through annotation, you create a mask file that guides the 
-      alignment process. To better understand how to design your mask according to your input,[consult the following table](#Select the mask),which          outlines the different mask files expected by the tool for various input image scenarios.
+      alignment process. To better understand how to design your mask according to your input,[consult the following table](https://github.com/sankeert1999/Virtual-orientation-tool-FIJI-VOTj/tree/main#select-the-mask),which          outlines the different mask files expected by the tool for various input image scenarios.
       <p align="center">
       <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_2.png" width="50%" height="50%">
       </p>
