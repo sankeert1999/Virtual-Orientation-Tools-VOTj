@@ -78,8 +78,19 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
 - ## Batch Mode
   Batch Mode allows users to batch process an entire folder of images. This mode provides three suboptions.
   - ### VOTj Batch Direct User Input
-  - ### VOTj Batch Annotation Assisted Alignment
+    <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTj_B_DUI.png" width="40%" height="40%">
+    </p>
+
   - ### VOTj Batch Custom Macro
+    <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTj_B_CM.png" width="40%" height="40%">
+    </p>
+
+  - ### VOTj Batch Annotation Assisted Alignment
+    <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTj_B_AAA.png" width="40%" height="40%">
+    </p> 
 
 
 # VOTj GUI Overview
@@ -144,7 +155,7 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
     - #### <ins> White </ins>
     - #### <ins> Mean </ins>
     <p align="center">
-    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTJ_background.png" width="50%" height="50%">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTj_background.png" width="50%" height="50%">
     </p>
 
 - ## Additional options
