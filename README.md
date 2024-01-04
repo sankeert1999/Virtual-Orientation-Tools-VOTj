@@ -130,16 +130,22 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
     - #### <ins> Image center </ins>
   
   - ### **Alignment with object pointing to**
-    This enables the user to configure the polarity of object of interest, allowing users to define the object's pointing direction. For asymmetrical objects, like a fish with a distinct head and tail, users can specify the desired orientation. For instance, if annotating, marking the head introduces asymmetry, and the tool aligns the object accordingly.
+    This enables the user to configure the polarity of object of interest, allowing users to define the object's pointing direction. For asymmetrical objects, like a fish with a distinct head and tail, users can specify the desired orientation. For instance, while annotating, marking the head specifically introduces asymmetry in the mask (see the below figure), and the tool aligns the object accordingly with the polarity.
     - #### <ins> Any </ins>
     - #### <ins> Left (for horizontal)/Top (for vertical) </ins>
     - #### <ins> Right (for horizontal)/Bottom (for vertical) </ins>
+    <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTJ_orientation.png" width="50%" height="50%">
+    </p>
 
   - ### **Fill background with**
     This enables the user to customize the background color by choosing from three options: black, white, and mean. The background color is applied to the alignment operation, and the user's selected color determines the background hue. The "mean" option utilizes the mean intensity of the image to fill the background, offering a unique approach to color customization based on the overall image intensity.
     - #### <ins> Black </ins>
     - #### <ins> White </ins>
     - #### <ins> Mean </ins>
+    <p align="center">
+    <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTJ_background.png" width="50%" height="50%">
+    </p>
 
 - ## Additional options
 
