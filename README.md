@@ -17,8 +17,8 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
     </p>
   
   - ### VOTj Annotation Assisted Alignment
-    In this specific operational mode of the VOTj tool, the user is prompted to annoate the object of interest and based on these annotations 
-    the input image is alingned.
+    In this specific operational mode of the VOTj tool, the user is prompted to annotate the object of interest and based on these annotations 
+    the input image is aligned.
     - #### <ins> Selecting the input image </ins>
     <p align="center">
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_1.png" width="50%" height="50%">
@@ -27,18 +27,14 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
     - #### <ins> Selecting the annotation mode </ins>
       User would be prompted with a window to select the annotation mode (only for images with dimensionality > 3).
       There are two annoation mode Single-Slice-Annotation and Multi-Slice-Annotation.
+
       - ##### **Single-Slice-Annotation**
-        **Single-Slice-Annotation** is ideal when you want to align a single slice of your input image. This mode is useful in 
-        various situations. For example, if you have a 3D stack with multiple Z slices and want to align the entire stack based 
-        on a single annotated slice, this mode 
-        allows you to annotate that specific slice (typically the most focused one).
+        This option lets you annotate a single slice (e.g of a Z-stack or multi-channel image) and the tool will align the full stack based on this single annotation.
+
       - ##### **Multi-Slice Annotation**
-        **Multi-Slice-Annotation**, on the other hand, allows you to annotate multiple slices to achieve image alignment. This 
-        mode is beneficial when your image data is more complex. For instance, if you have a 5D stack containing 3 channels, 10 
-        slices, and 20 timepoints, choosing 
-        **Multi-Slice-Annotation** lets you select both the channel and the slice number to annotate across all timepoints. The 
-        tool then aligns the image based on this comprehensive annotation across the specified slices, ensuring precise 
-        alignment even in complex 5D datasets.
+        **Multi-Slice-Annotation**, on the other hand, allows you to annotate multiple slices, typically suited for timelapse where each timepoint is aligned separately (with any number of Z-slices and channels).  
+        A single slice in each timepoint is annotated (you choose which timepoint and Z-slice to use).  
+        The "substacks" (Z and/or multi-channel) at each timepoint are then aligned separately based on this timepoint-specific annotation.  
 
       These two annotation modes provide you with the flexibility to align images efficiently based on your specific image 
       characteristics and alignment requirements. In essence, through annotation, you create a mask file that guides the 
@@ -50,7 +46,7 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
     - #### <ins> Selecting appropriate Slice/Stack for annotation </ins>
       After selecting the appropriate annotation mode, the user will be prompted to choose the image or stack for annotation. Depending on 
       whether you've chosen **Single-Slice-Annotation** or **Multi-Slice-Annotation**, the tool will guide you accordingly. For instance, if 
-      you have a 3D stack with multiple Z slices and opt for **Single-Slice-Annotation** mode, you will be prompted to select the specific Z 
+      you have a Z-stack and opt for **Single-Slice-Annotation** mode, you will be prompted to select the specific Z 
       slice you wish to annotate.
       <p align="center">
       <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT_U_annot_3.png" width="50%" height="50%">
