@@ -96,17 +96,21 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
     Input image to be aligned (compatibile across a wide range of image types, including 2D, 3D, 4D, and 5D data.)
   - ### **Select the mask** 
     Corresponding mask file for the input image representing the object of interest within the image. The table below outlines the various scenarios in which this tool is compatible and the corresponding mask file expectations for the respective input files.
-    | INPUT (C,Z,T) | INPUT IMAGE TYPE| Binary Mask | Output |
-    |-----------------|-----------------|-----------------|-----------------|
-    | C > 1, Z > 1, T > 1 |	5D | 2D/3D | HyperStack (5D) |
-    | C > 1, Z > 1, T = 1 | 4D | 2D/3D | HyperStack (4D) |
-    | C > 1, Z = 1, T = 1 |	3D | 2D | Stack (3D) |
-    | C = 1, Z = 1, T = 1 |	2D | 2D | IMG (2D) |
-    | C > 1, Z = 1, T > 1 |	4D | 2D/3D | HyperStack (4D) |
-    | C = 1, Z = 1, T > 1 |	3D | 2D/3D | Stack (3D) |
-    | C = 1, Z > 1, T > 1 |	4D | 2D/3D | HyperStack (4D) |
-    | C = 1, Z > 1, T = 1 |	3D | 2D/3D | Stack (3D) |
 
+| INPUT (C,Z,T)       | INPUT IMAGE TYPE                          | Binary Mask                                                                                                                  |
+| ------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| C = 1, Z = 1, T = 1 | Single Plane (2D)                         | PLANE (a single plane/2D with the mask)                                                                                      |
+| C = 1, Z > 1, T = 1 | Z-stack (3D)                              | PLANE -> align all Z-slices identically / STACK (Z-stack) -> Align each Z-slice separately\* (1-to-1 between image and mask) |
+| C = 1, Z = 1, T > 1 | Timelapse (3D)                            | PLANE -> align all timepoints identically / STACK (timelapse) -> Align each timepoint separately                             |
+| C > 1, Z = 1, T = 1 | Multi-channel (3D)                        | PLANE only ->  align all channels indentically. The tool does not support separate alignment of channels                     |
+| C > 1, Z > 1, T = 1 | Multi-channel Z-stack (4D)                | PLANE -> align all slices identically / STACK (Z-stack) -> align Z-slices separately\*                                       |
+| C > 1, Z = 1, T > 1 | Multi-channel timelapse (4D)              | PLANE -> align all timepoints identically /  STACK (timelapse) to align each timepoint separately                            |
+| C = 1, Z > 1, T > 1 | Z-stack with timelapse (4D)               | PLANE -> align all slices identically / STACK (timelapse) : align Z-stack at each timepoint separately                       |
+| C > 1, Z > 1, T > 1 | Multi-channel, Z-stack and Timelapse (5D) | PLANE -> align all slices identically / STACK (timelapse) : align stack at each timepoint separately                         |
+
+\* Slices of a Z-stack should typically be aligned with the same transformation, as they were normally acquired with the same orientation.  
+The option to align slices separately is rather here to adress the fact that timelapse are sometimes recognized as Z-stack in ImageJ.   
+So you can still align each timepoint separately in that case with the tool, without having to swap dimensions first.  
 
 - ## Object alignment settings
   - ### **Tasks**
