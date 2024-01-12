@@ -74,16 +74,22 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
 - ## Batch Mode
   Batch Mode allows users to batch process an entire folder of images. This mode provides three suboptions.
   - ### VOTj Batch Direct User Input
+    This operational mode is a batch format of the [VOTj Direct User Input mode](#VOTj-Direct-User-Input)
+    The GUI initiates by requesting input configuration, where users specify the input image and its corresponding mask folder details. It is essential that the filenames of masks match those of the input images to avoid errors. The subsequent steps include configuring [object alignment settings](#Object-alignment-settings),[additional options](#Additional-options) and finally [output configuration](#Output-configuration). In the output configuration, users specify the destination folder for saving output images and choose the desired image format.
     <p align="center">
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTj_B_DUI.png" width="40%" height="40%">
     </p>
 
   - ### VOTj Batch Custom Macro
+    This operational mode allows users to process a folder of images, using a custom macro to generate masks for each input image and further orienting them.
+    The GUI begins by prompting input configuration, where users specify image folder details and the macro folder. The macro should generate masks, with the final mask as the active image window. Followed by configuring [object alignment settings](#Object-alignment-settings),[additional options](#Additional-options) and finally [output configuration](#Output-configuration).Users can save output images to a specified folder and opt to save corresponding masks in a "Mask_VOTj" subfolder. Users also have the flexibility to choose image and mask formats.
     <p align="center">
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTj_B_CM.png" width="40%" height="40%">
     </p>
 
   - ### VOTj Batch Annotation Assisted Alignment
+    This operational mode is a batch format of the [VOTj Annotation Assisted Alignment](#VOTj-Annotation-Assisted-Alignment)
+    The GUI initiates by requesting input configuration, where users specify the input image. The subsequent steps include configuring [object alignment settings](#Object-alignment-settings),[additional options](#Additional-options) and finally [output configuration](#Output-configuration).Users can save output images to a specified folder and opt to save corresponding masks in a "Mask_VOTj" subfolder. Users also have the flexibility to choose image and mask formats. Following GUI configuration, proceed with the annotation procedure for each image, mirroring the process in [VOTj Annotation Assisted Alignment](#VOTj-Annotation-Assisted-Alignment).
     <p align="center">
     <img src="https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOTj_B_AAA.png" width="40%" height="40%">
     </p> 
@@ -97,16 +103,16 @@ The Virtual Orientation Tool for Fiji (VOTj) offers two distinct modes:
   - ### **Select the mask** 
     Corresponding mask file for the input image representing the object of interest within the image. The table below outlines the various scenarios in which this tool is compatible and the corresponding mask file expectations for the respective input files.
 
-| INPUT (C,Z,T)       | INPUT IMAGE TYPE                          | Binary Mask                                                                                                                  |
-| ------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| C = 1, Z = 1, T = 1 | Single Plane (2D)                         | PLANE (a single plane/2D with the mask)                                                                                      |
-| C = 1, Z > 1, T = 1 | Z-stack (3D)                              | PLANE -> align all Z-slices identically / STACK (Z-stack) -> Align each Z-slice separately\* (1-to-1 between image and mask) |
-| C = 1, Z = 1, T > 1 | Timelapse (3D)                            | PLANE -> align all timepoints identically / STACK (timelapse) -> Align each timepoint separately                             |
-| C > 1, Z = 1, T = 1 | Multi-channel (3D)                        | PLANE only ->  align all channels indentically. The tool does not support separate alignment of channels                     |
-| C > 1, Z > 1, T = 1 | Multi-channel Z-stack (4D)                | PLANE -> align all slices identically / STACK (Z-stack) -> align Z-slices separately\*                                       |
-| C > 1, Z = 1, T > 1 | Multi-channel timelapse (4D)              | PLANE -> align all timepoints identically /  STACK (timelapse) to align each timepoint separately                            |
-| C = 1, Z > 1, T > 1 | Z-stack with timelapse (4D)               | PLANE -> align all slices identically / STACK (timelapse) : align Z-stack at each timepoint separately                       |
-| C > 1, Z > 1, T > 1 | Multi-channel, Z-stack and Timelapse (5D) | PLANE -> align all slices identically / STACK (timelapse) : align stack at each timepoint separately                         |
+|INPUT IMAGE TYPE|BINARY MASK|
+|:-------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------- |
+| Single Plane (2D --> C = 1, Z = 1, T = 1) | <ins>**PLANE**</ins> (a single plane/2D with the mask)                                                                                      |
+| Z-stack (3D --> C = 1, Z > 1, T = 1) | <ins>**PLANE**</ins> -> align all Z-slices identically / <ins>**STACK (Z-stack)** </ins> -> Align each Z-slice separately\* (1-to-1 between image and mask) |
+| Timelapse (3D --> C = 1, Z = 1, T > 1) | <ins>**PLANE**</ins> -> align all timepoints identically / <ins>**STACK (timelapse)**</ins> -> Align each timepoint separately                             |
+| Multi-channel (3D --> C > 1, Z = 1, T = 1) | <ins>**PLANE**</ins> only ->  align all channels indentically. The tool does not support separate alignment of channels |
+| Multi-channel Z-stack (4D --> C > 1, Z > 1, T = 1) | <ins>**PLANE**</ins> -> align all slices identically / <ins>**STACK (Z-stack)**</ins> -> align Z-slices separately\*                                       |
+| Multi-channel timelapse (4D --> C > 1, Z = 1, T > 1) | <ins>**PLANE**</ins> -> align all timepoints identically /  <ins>**STACK (timelapse)**</ins> to align each timepoint separately                            |
+| Z-stack with timelapse (4D --> C = 1, Z > 1, T > 1) | <ins>**PLANE**</ins> -> align all slices identically / <ins>**STACK (timelapse)**</ins> : align Z-stack at each timepoint separately                       |
+| Multi-channel, Z-stack and Timelapse (5D --> C > 1, Z > 1, T > 1) |<ins> **PLANE**</ins> -> align all slices identically / <ins>**STACK (timelapse)**</ins> : align stack at each timepoint separately                         |
 
 \* Slices of a Z-stack should typically be aligned with the same transformation, as they were normally acquired with the same orientation.  
 The option to align slices separately is rather here to adress the fact that timelapse are sometimes recognized as Z-stack in ImageJ.   
