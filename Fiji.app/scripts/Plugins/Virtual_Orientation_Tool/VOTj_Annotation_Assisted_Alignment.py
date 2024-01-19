@@ -4,7 +4,7 @@ from ij import IJ
 from ij.macro import MacroConstants
 from ij.process import StackStatistics
 from ij.plugin import ImageCalculator,Duplicator, ImageInfo
-from ij.gui import WaitForUserDialog, GenericDialog
+from ij.gui import WaitForUserDialog, GenericDialog, NonBlockingGenericDialog
 from fiji.util.gui import GenericDialogPlus
 from java.awt import Font
 ##Calling the utils file 
@@ -206,7 +206,7 @@ if Win.wasOKed():
 
     # If the image has multiple channels, let the user choose the appropriate channel number
     elif img_type == "3D" and channels > 1:                       
-            Win = GenericDialogPlus("Select the appropriate channel for annotation") 
+            Win = NonBlockingGenericDialog("Select the appropriate channel for annotation") 
             Win.addNumericField("Channel_number", prefs.getInt("Channel_number", 1), 1)                                 
             Win.showDialog()
             if Win.wasOKed():  
@@ -230,7 +230,7 @@ if Win.wasOKed():
             if img_type == "3D":
                 # If the image has multiple slices, let the user choose the appropriate slice number
                 if slices > 1:
-                    Win = GenericDialogPlus("Select the appropriate slice for annotation") 
+                    Win = NonBlockingGenericDialog("Select the appropriate slice for annotation") 
                     Win.addNumericField("Slice_number", prefs.getInt("Slice_number", 1), 1)                                 
                     Win.showDialog()
                     if Win.wasOKed():  
@@ -240,7 +240,7 @@ if Win.wasOKed():
                         mask.show()
                 # If the image has multiple frames, let the user choose the appropriate frame number
                 elif frames > 1:
-                    Win = GenericDialogPlus("Select the appropriate frame for annotation") 
+                    Win = NonBlockingGenericDialog("Select the appropriate frame for annotation") 
                     Win.addNumericField("Frame_number", prefs.getInt("Frame_number", 1), 1)                                 
                     Win.showDialog()
                     if Win.wasOKed():  
@@ -253,7 +253,7 @@ if Win.wasOKed():
             elif img_type == "4D":
                 # If the image has multiple slices and frames, let the user choose the appropriate slice number and frame number
                 if channels == 1:
-                    Win = GenericDialogPlus("Select the appropriate image for annotation") 
+                    Win = NonBlockingGenericDialog("Select the appropriate image for annotation") 
                     Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)
                     Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1)                                   
                     Win.showDialog()
@@ -266,7 +266,7 @@ if Win.wasOKed():
                         mask.show()
                 # If the image has multiple channels and frames, let the user choose the appropriate channel number and frame number        
                 elif slices == 1:
-                    Win = GenericDialogPlus("Select the appropriate image for annotation") 
+                    Win = NonBlockingGenericDialog("Select the appropriate image for annotation") 
                     Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
                     Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1)                                   
                     Win.showDialog()
@@ -279,7 +279,7 @@ if Win.wasOKed():
                         mask.show()
                 # If the image has multiple slices and channels, let the user choose the appropriate slice number and channel number        
                 elif frames == 1:
-                    Win = GenericDialogPlus("Select the appropriate image for annotation") 
+                    Win = NonBlockingGenericDialog("Select the appropriate image for annotation") 
                     Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
                     Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)                                   
                     Win.showDialog()
@@ -292,7 +292,7 @@ if Win.wasOKed():
                         mask.show()
             elif img_type == "5D":
                 # Let the user choose the appropriate slice number, channel number and frame number
-                Win = GenericDialogPlus("Select the appropriate image for annotation") 
+                Win = NonBlockingGenericDialog("Select the appropriate image for annotation") 
                 Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
                 Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)
                 Win.addNumericField("Frame_number", prefs.getInt("Frame_number",1),1) 
@@ -317,7 +317,7 @@ if Win.wasOKed():
             elif img_type == "4D":
                 # If the image has multiple slices and frames, let the user choose the appropriate slice number and frame number
                 if channels == 1:
-                    Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
+                    Win = NonBlockingGenericDialog("Select the appropriate image stack for annotation") 
                     Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)                                   
                     Win.showDialog()
                     if Win.wasOKed():
@@ -327,7 +327,7 @@ if Win.wasOKed():
                         mask.show()
                 # If the image has multiple channels and frames, let the user choose the appropriate channel number and frame number        
                 elif slices == 1:
-                    Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
+                    Win = NonBlockingGenericDialog("Select the appropriate image stack for annotation") 
                     Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)                                   
                     Win.showDialog()
                     if Win.wasOKed():
@@ -337,7 +337,7 @@ if Win.wasOKed():
                         mask.show()
                 # If the image has multiple slices and channels, let the user choose the appropriate slice number and channel number        
                 elif frames == 1:
-                    Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
+                    Win = NonBlockingGenericDialog("Select the appropriate image stack for annotation") 
                     Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)                                   
                     Win.showDialog()
                     if Win.wasOKed():
@@ -347,7 +347,7 @@ if Win.wasOKed():
                         mask.show()
             elif img_type == "5D":
                 # Let the user choose the appropriate slice number, channel number and frame number
-                Win = GenericDialogPlus("Select the appropriate image stack for annotation") 
+                Win = NonBlockingGenericDialog("Select the appropriate image stack for annotation") 
                 Win.addNumericField("Channel_number", prefs.getInt("Channel_number",1),1)
                 Win.addNumericField("Slice_number", prefs.getInt("Slice_number",1),1)
                 Win.showDialog()
