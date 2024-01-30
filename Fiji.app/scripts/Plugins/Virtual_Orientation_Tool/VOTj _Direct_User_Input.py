@@ -8,8 +8,8 @@ Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj) - Direct User 
 custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
 Win.addMessage("Input Configuration",custom_font_h1) 
 
-Win.addImageChoice("Select the image", prefs.get("Image","Choice")) 
-Win.addImageChoice("Select the mask", prefs.get("Mask", "Choice")) 
+Win.addImageChoice("Select_the_image", prefs.get("Image","Choice")) 
+Win.addImageChoice("Select_the_mask", prefs.get("Mask", "Choice")) 
 
 
 # Add a message with the specified font
@@ -17,13 +17,13 @@ Win.addMessage("Object alignment settings",custom_font_h1)
 Win.addChoice("Tasks", ["Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"], prefs.get("Tasks","Center object and then align to orientation"))
 # Create a Font instance
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
-Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
-Win.addChoice("Alignment with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignment with object pointing to","Any"))
-Win.addChoice("Fill background with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
+Win.addChoice("Center_of_rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
+Win.addChoice("Alignment_with_object_pointing_to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignment with object pointing to","Any"))
+Win.addChoice("Fill_background_with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
 # Add a message with the specified font
 Win.addMessage("Additional options",custom_font_h1) 
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-Win.addCheckbox("Log File Output", prefs.getInt("Log_Window", False)) 
+Win.addCheckbox("Log_File_Output", prefs.getInt("Log_Window", False)) 
 
 # Display a message asking users to cite the paper if they use the plugin.
 Win.addMessage("""If you use this plugin please cite:Cite paper""") 

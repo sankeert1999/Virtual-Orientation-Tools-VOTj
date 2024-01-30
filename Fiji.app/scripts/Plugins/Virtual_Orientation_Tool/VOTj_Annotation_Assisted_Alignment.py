@@ -368,13 +368,13 @@ if Win.wasOKed():
     Win.addChoice("Tasks", ["Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"], prefs.get("Tasks","Center object and then align to orientation"))
     # Create a Font instance
     Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
-    Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
-    Win.addChoice("Alignment with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignment with object pointing to","Any"))
-    Win.addChoice("Fill background with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
+    Win.addChoice("Center_of_rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
+    Win.addChoice("Alignment_with_object_pointing_to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignment with object pointing to","Any"))
+    Win.addChoice("Fill_background_with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
     # Add a message with the specified font
     Win.addMessage("Additional options",custom_font_h1) 
-    Win.addCheckbox("Enlarge canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-    Win.addCheckbox("Log window", prefs.getInt("Log_Window", False)) 
+    Win.addCheckbox("Enlarge_canvas_(prevent image cropping)", prefs.getInt("Enlarge", False)) 
+    Win.addCheckbox("Log_window", prefs.getInt("Log_Window", False)) 
     # Display the GUI to the user.
     Win.showDialog()
     if Win.wasOKed():  

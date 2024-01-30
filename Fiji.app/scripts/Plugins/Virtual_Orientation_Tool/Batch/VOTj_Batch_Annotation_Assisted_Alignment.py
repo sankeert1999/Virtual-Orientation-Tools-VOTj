@@ -179,28 +179,28 @@ Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj)_Batch - Annota
 # Add a message with the specified font
 custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
 Win.addMessage("Input Configuration",custom_font_h1) 
-Win.addDirectoryOrFileField("Image directory selector", prefs.get("InputDirPath", ""))
+Win.addDirectoryOrFileField("Image_directory_selector", prefs.get("InputDirPath", ""))
 
 # Add a message with the specified font
 Win.addMessage("Object alignment settings",custom_font_h1) 
 # Create a Font instance
 Win.addChoice("Tasks", ["Move object to image-center","Align object to desired orientation" ,"Center object and then align to orientation"], prefs.get("Tasks","Center object and then align to orientation"))
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation","Horizontal"))
-Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
-Win.addChoice("Alignement with object pointing to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignement with object pointing to","Any"))
-Win.addChoice("Fill background with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
+Win.addChoice("Center_of_rotation", ["Object center", "Image center"], prefs.get("Center of rotation","Image center"))
+Win.addChoice("Alignement_with_object_pointing_to", ["Any","Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignement with object pointing to","Any"))
+Win.addChoice("Fill_background_with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
 # Add a message with the specified font
 Win.addMessage("Additional options",custom_font_h1) 
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-Win.addCheckbox("Log File Output", prefs.getInt("Log_Window", False)) 
+Win.addCheckbox("Log_File_Output", prefs.getInt("Log_Window", False)) 
 
 Win.addMessage("Output Configuration",custom_font_h1) 
-Win.addDirectoryOrFileField("Save processed images/masks to", prefs.get("OutputDirPath", ""))
-Win.addChoice("Save images in format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format_out", "tiff"))
+Win.addDirectoryOrFileField("Save_processed_images/masks_to", prefs.get("OutputDirPath", ""))
+Win.addChoice("Save_images_in_format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format_out", "tiff"))
 
-Win.addCheckbox("Save mask file", prefs.getInt("SaveMask", False)) 
+Win.addCheckbox("Save_mask_file", prefs.getInt("SaveMask", False)) 
 Win.addToSameRow()
-Win.addChoice("Save masks in format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format_mask", "tiff"))
+Win.addChoice("Save_masks_in_format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format_mask", "tiff"))
 
 # Display a message asking users to cite the paper if they use the plugin.
 Win.addMessage("""If you use this plugin please cite: Cite paper""") 

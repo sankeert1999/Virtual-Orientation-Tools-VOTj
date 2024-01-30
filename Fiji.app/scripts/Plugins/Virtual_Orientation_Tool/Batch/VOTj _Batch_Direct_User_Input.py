@@ -16,8 +16,8 @@ custom_font_h1 = Font("SansSerif", Font.BOLD, 14)
 Win.addMessage("Input Configuration", custom_font_h1) 
 
 # Add directory or file fields to input image and mask directories
-Win.addDirectoryOrFileField("Image directory selector", prefs.get("InputDirPath", ""))
-Win.addDirectoryOrFileField("Mask directory selector", prefs.get("MaskDirPath", ""))
+Win.addDirectoryOrFileField("Image_directory_selector", prefs.get("InputDirPath", ""))
+Win.addDirectoryOrFileField("Mask_directory_selector", prefs.get("MaskDirPath", ""))
 
 # Add a message to the dialog window with a specified font for the object alignment settings section
 Win.addMessage("Object alignment settings", custom_font_h1) 
@@ -25,22 +25,22 @@ Win.addMessage("Object alignment settings", custom_font_h1)
 # Add choices for different alignment settings
 Win.addChoice("Tasks", ["Move object to image-center", "Align object to desired orientation", "Center object and then align to orientation"], prefs.get("Tasks", "Center object and then align to orientation"))
 Win.addChoice("Orientation", ["Horizontal", "Vertical"], prefs.get("Orientation", "Horizontal"))
-Win.addChoice("Center of rotation", ["Object center", "Image center"], prefs.get("Center of rotation", "Image center"))
-Win.addChoice("Alignment with object pointing to", ["Any", "Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignment with object pointing to", "Any"))
-Win.addChoice("Fill background with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
+Win.addChoice("Center_of_rotation", ["Object center", "Image center"], prefs.get("Center of rotation", "Image center"))
+Win.addChoice("Alignment_with_object_pointing_to", ["Any", "Left (for horizontal) / Top (for vertical)", "Right (for horizontal) / Bottom (for vertical)"], prefs.get("Alignment with object pointing to", "Any"))
+Win.addChoice("Fill_background_with", ["Black","White", "Mean"], prefs.get("Fill background with","Black"))
 # Add a message to the dialog window with a specified font for additional options section
 Win.addMessage("Additional options", custom_font_h1) 
 
 # Add checkboxes for additional options
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-Win.addCheckbox("Log File Output", prefs.getInt("Log_Window", False)) 
+Win.addCheckbox("Log_File_Output", prefs.getInt("Log_Window", False)) 
 
 # Add a message to the dialog window with a specified font for output configuration section
 Win.addMessage("Output Configuration", custom_font_h1) 
 
 # Add directory or file fields for output directory
-Win.addDirectoryOrFileField("Save processed images/masks to", prefs.get("OutputDirPath", ""))
-Win.addChoice("Save images in format", ["tif", "tiff", "jpg", "jpeg", "png", "bmp"], prefs.get("Save_Format_out", "tiff"))
+Win.addDirectoryOrFileField("Save_processed_images/masks_to", prefs.get("OutputDirPath", ""))
+Win.addChoice("Save_images_in_format", ["tif", "tiff", "jpg", "jpeg", "png", "bmp"], prefs.get("Save_Format_out", "tiff"))
 
 # Display a message asking users to cite the paper if they use the plugin.
 Win.addMessage("""If you use this plugin please cite:
