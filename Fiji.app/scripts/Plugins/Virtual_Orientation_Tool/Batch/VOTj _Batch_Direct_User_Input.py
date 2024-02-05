@@ -33,7 +33,7 @@ Win.addMessage("Additional options", custom_font_h1)
 
 # Add checkboxes for additional options
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-Win.addCheckbox("Log_File_Output", prefs.getInt("Log_Window", False)) 
+Win.addCheckbox("Log_File_Output", prefs.getInt("log_window", False)) 
 
 # Add a message to the dialog window with a specified font for output configuration section
 Win.addMessage("Output Configuration", custom_font_h1) 

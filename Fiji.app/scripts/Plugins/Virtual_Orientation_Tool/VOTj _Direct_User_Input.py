@@ -23,7 +23,7 @@ Win.addChoice("Fill_background_with", ["Black","White", "Mean"], prefs.get("Fill
 # Add a message with the specified font
 Win.addMessage("Additional options",custom_font_h1) 
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-Win.addCheckbox("Log_File_Output", prefs.getInt("Log_Window", False)) 
+Win.addCheckbox("Log_File_Output", prefs.getInt("log_window", False)) 
 
 # Display a message asking users to cite the paper if they use the plugin.
 Win.addMessage("""If you use this plugin please cite:Cite paper""") 
