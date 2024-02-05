@@ -65,7 +65,7 @@ if Win.wasOKed():
         IJ.log("Enlarge canvas (prevent image cropping) : " + str(enlarge))
         IJ.log("Fill background with : " + str(background))
         IJ.log("  ")
-        IJ.log("Logging the detected object orienatation")
+        IJ.log("Logging the detected object orientation")
         IJ.log("Filename : " + str(img.getTitle()))
     ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,background,log_window)
     imp_out = output_image_maker(img, ip_list)

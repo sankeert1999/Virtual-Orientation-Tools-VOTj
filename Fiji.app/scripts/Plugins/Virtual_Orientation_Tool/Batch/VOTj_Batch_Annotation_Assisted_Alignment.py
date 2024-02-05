@@ -437,14 +437,14 @@ if Win.wasOKed():
             if (img.getHeight() != mask.getHeight()) or (img.getWidth() != mask.getWidth()):
                 IJ.error("Mask dimension and Image dimension don't match")
                 if log_window == True:
-                    IJ.log("Logging the detected object orienatation")
+                    IJ.log("Logging the detected object orientation")
                     IJ.log("Mask dimension and image dimension don't match, object orientation aborted.")
                     IJ.log("Filename : " + str(img.getTitle()))
                     IJ.log(" ")
                 continue
 
             if log_window == True:
-                IJ.log("Logging the detected object orienatation")
+                IJ.log("Logging the detected object orientation")
                 IJ.log("Filename : " + str(img.getTitle()))
             
             ip_list = process_input_img(img, mask, task, orientation, center_of_rotation, enlarge,object_polarity,background,log_window)

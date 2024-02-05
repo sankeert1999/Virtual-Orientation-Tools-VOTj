@@ -126,7 +126,7 @@ if Win.wasOKed():
                 if (img.getHeight() != mask.getHeight()) or (img.getWidth() != mask.getWidth()):
                     IJ.error("Mask dimension and Image dimension don't match")
                     if log_window == True:
-                        IJ.log("Logging the detected object orienatation")
+                        IJ.log("Logging the detected object orientation")
                         IJ.log("Mask dimension and image dimension don't match, object orientation aborted.")
                         IJ.log("Filename : " + str(img.getTitle()))
                         IJ.log(" Filename : " + str(mask.getTitle()))
@@ -136,7 +136,7 @@ if Win.wasOKed():
                 else:
                     from VOT_Utils import process_input_img, output_image_maker
                     if log_window == True:
-                        IJ.log("Logging the detected object orienatation")
+                        IJ.log("Logging the detected object orientation")
                         IJ.log("Filename : " + str(img.getTitle()))
                         IJ.log(" Filename : " + str(mask.getTitle()))
                         
@@ -151,7 +151,7 @@ if Win.wasOKed():
                 error = "The mask filename doesn't match the image filename. Please verify."
                 IJ.error("Filename Mismatch", error)
                 if log_window == True:
-                    IJ.log("Logging the detected object orienatation")
+                    IJ.log("Logging the detected object orientation")
                     IJ.log("The mask filename doesn't match the image filename, object orientation aborted.")
                     IJ.log("Filename : " + str(img.getTitle()))
                     IJ.log(" Filename : " + str(mask.getTitle()))
