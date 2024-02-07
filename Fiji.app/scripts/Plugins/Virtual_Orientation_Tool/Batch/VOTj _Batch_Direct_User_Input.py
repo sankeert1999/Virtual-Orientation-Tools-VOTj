@@ -9,15 +9,15 @@ from java.awt import Font
 import os 
 
 # Create a generic dialog window with a specific title
-Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj)_Batch - Direct User Input")
+Win = GenericDialogPlus("Virtual Orientation Tools for FIJI (VOTj)_Batch - Direct User Input")
 
 # Add a message to the dialog window with a specified font for the input configuration section
 custom_font_h1 = Font("SansSerif", Font.BOLD, 14)
 Win.addMessage("Input Configuration", custom_font_h1) 
 
 # Add directory or file fields to input image and mask directories
-Win.addDirectoryOrFileField("Image_directory_selector", prefs.get("InputDirPath", ""))
-Win.addDirectoryOrFileField("Mask_directory_selector", prefs.get("MaskDirPath", ""))
+Win.addDirectoryOrFileField("Image_directory", prefs.get("InputDirPath", ""))
+Win.addDirectoryOrFileField("Mask_directory", prefs.get("MaskDirPath", ""))
 
 # Add a message to the dialog window with a specified font for the object alignment settings section
 Win.addMessage("Object alignment settings", custom_font_h1) 
@@ -33,7 +33,7 @@ Win.addMessage("Additional options", custom_font_h1)
 
 # Add checkboxes for additional options
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-Win.addCheckbox("Log_File_Output", prefs.getInt("log_window", False)) 
+Win.addCheckbox("Log_output", prefs.getInt("log_window", False)) 
 
 # Add a message to the dialog window with a specified font for output configuration section
 Win.addMessage("Output Configuration", custom_font_h1) 

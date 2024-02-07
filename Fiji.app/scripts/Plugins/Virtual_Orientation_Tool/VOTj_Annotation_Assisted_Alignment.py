@@ -175,7 +175,7 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
 
 
 ## Create a graphical user interface (GUI) for  Virtual Orientation Tool Annotation Toolbar 
-Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj) - Annotation Assisted Alignment") 
+Win = GenericDialogPlus("Virtual Orientation Tools for FIJI (VOTj) - Annotation Assisted Alignment") 
 
 # Add an option for users to select an image. 
 Win.addImageChoice("Input Image", prefs.get("Image","Choice")) 
@@ -360,7 +360,7 @@ if Win.wasOKed():
                     mask.show()
 
     ### Create a graphical user interface (GUI) for Virtual Orientation Toolbar
-    Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj) - Annotation Assisted Alignment") 
+    Win = GenericDialogPlus("Virtual Orientation Tools for FIJI (VOTj) - Annotation Assisted Alignment") 
     # Add a message with the specified font
     custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
     # Add a message with the specified font
@@ -374,7 +374,7 @@ if Win.wasOKed():
     # Add a message with the specified font
     Win.addMessage("Additional options",custom_font_h1) 
     Win.addCheckbox("Enlarge_canvas_(prevent image cropping)", prefs.getInt("Enlarge", False)) 
-    Win.addCheckbox("Log_window", prefs.getInt("Log_Window", False)) 
+    Win.addCheckbox("Log_output", prefs.getInt("Log_Window", False)) 
     # Display the GUI to the user.
     Win.showDialog()
     if Win.wasOKed():  

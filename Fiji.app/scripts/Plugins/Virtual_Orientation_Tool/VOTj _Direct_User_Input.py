@@ -3,7 +3,7 @@
 from ij import IJ
 from fiji.util.gui import GenericDialogPlus
 from java.awt import Font
-Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj) - Direct User Input")
+Win = GenericDialogPlus("Virtual Orientation Tools for FIJI (VOTj) - Direct User Input")
 # Add a message with the specified font
 custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
 Win.addMessage("Input Configuration",custom_font_h1) 
@@ -23,7 +23,7 @@ Win.addChoice("Fill_background_with", ["Black","White", "Mean"], prefs.get("Fill
 # Add a message with the specified font
 Win.addMessage("Additional options",custom_font_h1) 
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-Win.addCheckbox("Log_File_Output", prefs.getInt("log_window", False)) 
+Win.addCheckbox("Log_output", prefs.getInt("log_window", False)) 
 
 # Display a message asking users to cite the paper if they use the plugin.
 Win.addMessage("""If you use this plugin please cite:Cite paper""") 

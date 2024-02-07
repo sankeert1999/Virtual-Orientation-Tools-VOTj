@@ -175,11 +175,11 @@ def threshold_multi_slice_annotation(img, channel_start, channel_end, slice_star
 
 
 
-Win = GenericDialogPlus("Virtual Orientation Tool for FIJI (VOTj)_Batch - Annotation Assisted Alignment")
+Win = GenericDialogPlus("Virtual Orientation Tools for FIJI (VOTj)_Batch - Annotation Assisted Alignment")
 # Add a message with the specified font
 custom_font_h1 = Font("SansSerif", Font.BOLD, 14)  # Adjust font properties as needed
 Win.addMessage("Input Configuration",custom_font_h1) 
-Win.addDirectoryOrFileField("Image_directory_selector", prefs.get("InputDirPath", ""))
+Win.addDirectoryOrFileField("Image_directory", prefs.get("InputDirPath", ""))
 
 # Add a message with the specified font
 Win.addMessage("Object alignment settings",custom_font_h1) 
@@ -192,13 +192,13 @@ Win.addChoice("Fill_background_with", ["Black","White", "Mean"], prefs.get("Fill
 # Add a message with the specified font
 Win.addMessage("Additional options",custom_font_h1) 
 Win.addCheckbox("Enlarge_canvas (prevent image cropping)", prefs.getInt("Enlarge", False)) 
-Win.addCheckbox("Log_File_Output", prefs.getInt("Log_Window", False)) 
+Win.addCheckbox("Log_output", prefs.getInt("Log_Window", False)) 
 
 Win.addMessage("Output Configuration",custom_font_h1) 
 Win.addDirectoryOrFileField("Save_processed_images/masks_to", prefs.get("OutputDirPath", ""))
 Win.addChoice("Save_images_in_format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format_out", "tiff"))
 
-Win.addCheckbox("Save_mask_file", prefs.getInt("SaveMask", False)) 
+Win.addCheckbox("Save_generated_mask", prefs.getInt("SaveMask", False)) 
 Win.addToSameRow()
 Win.addChoice("Save_masks_in_format", ["tif", "tiff","jpg","jpeg","png","bmp"], prefs.get("Save_Format_mask", "tiff"))
 
