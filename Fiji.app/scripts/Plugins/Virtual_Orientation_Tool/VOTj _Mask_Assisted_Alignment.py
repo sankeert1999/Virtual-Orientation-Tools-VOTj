@@ -55,7 +55,7 @@ if Win.wasOKed():
     prefs.put("log_window", log_window)
 
 
-    from VOT_Utils import process_input_img,output_image_maker
+    from VOTj_Utils import process_input_img,output_image_maker
     if log_window == True:
         IJ.log("Logging the selected configuration options")
         IJ.log("Tasks : " + str(task))

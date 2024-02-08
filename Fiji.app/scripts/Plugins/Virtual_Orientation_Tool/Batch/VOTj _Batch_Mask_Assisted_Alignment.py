@@ -134,7 +134,7 @@ if Win.wasOKed():
                     continue
 
                 else:
-                    from VOT_Utils import process_input_img, output_image_maker
+                    from VOTj_Utils import process_input_img, output_image_maker
                     if log_window == True:
                         IJ.log("Logging the detected object orientation")
                         IJ.log("Filename : " + str(img.getTitle()))

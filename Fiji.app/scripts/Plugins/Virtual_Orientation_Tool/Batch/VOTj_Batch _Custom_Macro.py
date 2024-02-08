@@ -112,7 +112,7 @@ if Win.wasOKed():
             mask.changes = False
             
             ##Calling the utils file 
-            from VOT_Utils import process_input_img,output_image_maker
+            from VOTj_Utils import process_input_img,output_image_maker
 
             if (img.getHeight() != mask.getHeight()) or (img.getWidth() != mask.getWidth()):
                 IJ.error("Mask dimension and Image dimension don't match")

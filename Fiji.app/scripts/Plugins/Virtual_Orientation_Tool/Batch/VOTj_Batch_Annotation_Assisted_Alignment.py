@@ -9,7 +9,7 @@ from fiji.util.gui import GenericDialogPlus
 from java.awt import Font
 import os 
 ##Calling the utils file 
-from VOT_Utils import process_input_img,output_image_maker,CustomWaitDialog
+from VOTj_Utils import process_input_img,output_image_maker,CustomWaitDialog
 import textwrap
 
 
