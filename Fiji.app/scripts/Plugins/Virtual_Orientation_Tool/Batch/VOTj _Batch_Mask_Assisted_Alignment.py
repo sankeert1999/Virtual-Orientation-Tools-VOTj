@@ -9,7 +9,7 @@ from java.awt import Font
 import os 
 
 # Create a generic dialog window with a specific title
-Win = GenericDialogPlus("Virtual Orientation Tools for FIJI (VOTj)_Batch - Direct User Input")
+Win = GenericDialogPlus("Virtual Orientation Tools for FIJI (VOTj)_Batch - Mask Assisted Alignment")
 
 # Add a message to the dialog window with a specified font for the input configuration section
 custom_font_h1 = Font("SansSerif", Font.BOLD, 14)
