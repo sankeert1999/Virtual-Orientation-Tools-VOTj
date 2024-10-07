@@ -2,6 +2,15 @@
 This tool is designed to center and align objects of interest both horizontally and vertically from their base orientation. It requires an input image and a corresponding mask that defines the object of interest within the image.
 This tool is adapted at aligning a single object in each image, and this alignment can seamlessly propagate across multiple channels in the case of multichannel images. 
 It offers compatibility across a wide range of image types, including 2D, 3D, 4D, and 5D data.
+
+For detailed information and usage instructions,please refer to our publication:
+[https://www.micropublication.org/journals/biology/micropub-biology-001221](https://www.micropublication.org/journals/biology/micropub-biology-001221)
+
+The source code is available on GitHub:
+[https://github.com/sankeert1999/Virtual-Orientation-Tools-VOTj](https://github.com/sankeert1999/Virtual-Orientation-Tools-VOTj)
+
+A video tutorial is available on YouTube [https://youtu.be/WHeDhn1Mnpc](https://youtu.be/WHeDhn1Mnpc)
+
 ![Intro Image](https://github.com/sankeert1999/Virtual_orienation_tool_FIJI/blob/main/VOT.png)
 - ## How does it work ?
   The tool primarily serves to determine the orientation of a given object, aligning it with the horizontal or vertical axis, and optionally centering the object. The process begins by detecting the object of interest from the provided binary mask, followed by identifying its center. To establish the object's orientation, the tool employs [Principal Component Analysis (PCA)](https://docs.opencv.org/4.5.3/d1/dee/tutorial_introduction_to_pca.html) on the contour of the detected object. 
