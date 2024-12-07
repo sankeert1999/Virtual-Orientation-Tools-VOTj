@@ -1,13 +1,31 @@
+[![DOI](https://zenodo.org/badge/DOI/10.1186/s12859-020-3363-7.svg)](https://pmc.ncbi.nlm.nih.gov/articles/PMC11193110/)
+
+# Installation
+
+- ## Via the Fiji updater
+  Tick the __Virtual-Orientation-Tools-VOTj__ AND __IJ-OpenCV__ update site of the Fiji udpater.  
+  A new entry will show up in the Plugin Menu (all the way down) after restarting Fiji.  
+  See how to [activate an update site](https://imagej.net/How_to_follow_a_3rd_party_update_site).
+
+- ## Manual installation
+  You can also do a manual installation by copying the files in the right place. 
+  - **Install Dependencies**: Open the Fiji updater and tick the IJ-OpenCV update site to install the necessary dependencies.
+    
+  - **Download Files**: Go to the main page above this README, click the green Code button, and select Download ZIP. Unzip the downloaded file.
+
+  - **Merge Directories**: On Windows, drag the Fiji.app folder from the unzipped directory and drop it into the Fiji.app directory of your existing Fiji installation. This will merge both Fiji.app           
+    directories,automatically copying the files into the corresponding subdirectories.
+
+  - **Restart Fiji**: After merging the directories, restart Fiji.
+
+  If the drag-and-drop method does not work, manually copy the files from the unzipped directory to the corresponding directories in your Fiji installation. If some directories (e.g., Lib in Fiji.app/jars)     do not exist, create them.
+
+  
+
 # Virtual Orientation Tool for FIJI (VOTj)
 This tool is designed to center and align objects of interest both horizontally and vertically from their base orientation. It requires an input image and a corresponding mask that defines the object of interest within the image.
 This tool is adapted at aligning a single object in each image, and this alignment can seamlessly propagate across multiple channels in the case of multichannel images. 
 It offers compatibility across a wide range of image types, including 2D, 3D, 4D, and 5D data.
-
-For detailed information and usage instructions,please refer to our publication:
-[https://www.micropublication.org/journals/biology/micropub-biology-001221](https://www.micropublication.org/journals/biology/micropub-biology-001221)
-
-The source code is available on GitHub:
-[https://github.com/sankeert1999/Virtual-Orientation-Tools-VOTj](https://github.com/sankeert1999/Virtual-Orientation-Tools-VOTj)
 
 A video tutorial is available on YouTube [https://youtu.be/WHeDhn1Mnpc](https://youtu.be/WHeDhn1Mnpc)
 
